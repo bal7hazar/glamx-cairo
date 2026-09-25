@@ -3,7 +3,7 @@ version = 1
 
 [[package]]
 name = "benches"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "fixed",
  "glam",
@@ -13,7 +13,7 @@ dependencies = [
 
 [[package]]
 name = "consumer"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "fixed",
  "glam",
@@ -22,22 +22,22 @@ dependencies = [
 
 [[package]]
 name = "fixed"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://scarbs.xyz/"
-checksum = "sha256:2f5867291f4bc0660ee113c1cb5e3edac65515dc4fb8618283d26b30bd13a021"
+checksum = "sha256:a8f7ec541b8cc85894688ae9008cddb87cccc55a024b04b35f7fd3716d715064"
 
 [[package]]
 name = "glam"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://scarbs.xyz/"
-checksum = "sha256:61e33108ce8e6936f4f336366a7a5e6fc75deedc3193d11ba10e9a40da767c8c"
+checksum = "sha256:d3b4327f57b012dfa848e948ca7faee8dd10f475eaaa62e8456dcb640c4835fc"
 dependencies = [
  "fixed",
 ]
 
 [[package]]
 name = "glamx"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "fixed",
  "glam",

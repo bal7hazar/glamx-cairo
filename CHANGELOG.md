@@ -5,10 +5,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning pol
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.4.0] - 2026-09-25
+
+First release of `glamx` cut from `glamx-cairo`: depends on the published `fixed` 0.4.0 (adds the
+hyperbolic functions) and `glam` 0.4.0. No numeric result of `glamx` changes; every gas snapshot
+and golden file is identical. Released so that `glamx` shares one `Fixed` type with the other
+consumers of `fixed` 0.4.0 (pre-1.0, `^0.3.0` excludes `0.4.0`).
+
 ### Changed
 
-- Repository split: `glamx` now lives in `bal7hazar/glamx-cairo` and consumes published
-  `fixed = "0.3.0"` and `glam = "0.3.0"` dependencies from the Scarb registry.
+- Repository split: `glamx` now lives in `bal7hazar/glamx-cairo` and consumes the published
+  `fixed` and `glam` from the Scarb registry (`fixed = "0.4.0"`, `glam = "0.4.0"`).
 
 ## [0.3.0] - 2026-09-23
 
