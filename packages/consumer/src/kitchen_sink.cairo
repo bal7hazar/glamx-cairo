@@ -1,5 +1,5 @@
-//! Everything of `Scalar`, `Particles2d` and `Rigid3d`, plus `Mat4` inverse, `slerp`, Euler
-//! conversions, a camera projection and `SymmetricEigen3`.
+//! Everything used by `Particles2d` and `Rigid3d`, plus scalar operations, `Mat4` inverse,
+//! `slerp`, Euler conversions, a camera projection and `SymmetricEigen3`.
 
 #[starknet::contract]
 pub mod KitchenSink {

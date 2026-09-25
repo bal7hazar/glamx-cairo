@@ -1,10 +1,9 @@
-# glam-cairo
+# glamx-cairo
 
 @AGENTS.md
 
 ## Claude-specific
 
-- The main session is the orchestrator (see `docs/PLAN.md` and `docs/ORCHESTRATOR.md`); porters are
-  sub-agents launched through the local `claude` / `codex` CLIs in their own worktree, one module
-  each, one pull request each.
-- Work in the provided worktree only; never `cd` to the main checkout; never use bare `git stash`.
+- Cross-repository orchestration lives in `bal7hazar/glam-cairo` under `docs/ORCHESTRATOR.md`.
+- Work only in the provided worktree; never change to the main checkout and never use a bare
+  `git stash`.

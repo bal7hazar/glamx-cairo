@@ -1,6 +1,6 @@
 [package]
 name = "consumer"
-description = "Starknet contract fixtures measuring the compiled class size of the fixed, glam and glamx packages (not published)"
+description = "Starknet contract fixtures measuring the compiled class size of glamx and its dependencies (not published)"
 version.workspace = true
 edition.workspace = true
 cairo-version.workspace = true

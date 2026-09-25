@@ -16,11 +16,10 @@ north-star metric) and `--tracked-resource cairo-steps` gives steps and builtins
 pay). Results are deterministic, so the check uses exact equality.
 
 Every bench file `tests/bench_<m>.cairo` is its own snforge test crate (`[[test]]` target in
-packages/benches/Scarb.toml, checked by `check_targets`): snforge's cost per test grows with the
-size of the compiled test program, so one crate holding the 4 700 benches took ~990 s and the 31
-small crates take ~80 s, with identical numbers.
+packages/benches/Scarb.toml, checked by `check_targets`) so unrelated modules are not compiled
+into each benchmark program.
 
-One snapshot file per bench module (`bench_vec3.cairo` -> `gas/vec3.snap`) so that parallel pull
+One snapshot file per bench module (`bench_pose3.cairo` -> `gas/pose3.snap`) so that parallel pull
 requests touching different modules never conflict.
 """
 import argparse

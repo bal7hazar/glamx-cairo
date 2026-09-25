@@ -6,16 +6,12 @@ cd "$(dirname "$0")/.."
 scarb fmt --check --workspace
 scarb lint --workspace --test --deny-warnings
 scarb build --workspace
-# The benches package is not run here: `bench.py check` below runs every bench (twice, once per
-# metric) and fails on any failing test, so `snforge test --workspace` would only repeat it.
-for dir in packages/*/; do
-  pkg=$(basename "$dir")
-  [ "$pkg" = benches ] || snforge test -p "$pkg"
-done
+# The benches package is not run here: `bench.py check` below runs every bench twice and fails on
+# any failing test. The consumer package has no tests; `bytecode_size.py` builds it in release mode.
+snforge test -p glamx
 python3 scripts/bench.py check
 # Class size of the packages/consumer contract fixtures (gas/bytecode.size, release build).
 python3 scripts/bytecode_size.py check
-python3 scripts/api_parity.py --check
 python3 scripts/panic_coverage.py --check
 python3 scripts/gas_tables.py --check
 # Golden vectors are up to date with tools/refgen (skipped when the Rust toolchain is absent; CI

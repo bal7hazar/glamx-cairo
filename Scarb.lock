@@ -23,16 +23,16 @@ dependencies = [
 [[package]]
 name = "fixed"
 version = "0.3.0"
-dependencies = [
- "snforge_std",
-]
+source = "registry+https://scarbs.xyz/"
+checksum = "sha256:2f5867291f4bc0660ee113c1cb5e3edac65515dc4fb8618283d26b30bd13a021"
 
 [[package]]
 name = "glam"
 version = "0.3.0"
+source = "registry+https://scarbs.xyz/"
+checksum = "sha256:61e33108ce8e6936f4f336366a7a5e6fc75deedc3193d11ba10e9a40da767c8c"
 dependencies = [
  "fixed",
- "snforge_std",
 ]
 
 [[package]]

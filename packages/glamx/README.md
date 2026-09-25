@@ -1,12 +1,16 @@
 # glamx
 
-Port of Dimforge [glamx](https://github.com/dimforge/glamx) 0.3.1 to Cairo on top of
-[`glam`](../glam) and the [`fixed`](../fixed) Q32.32 scalar: `Rot2`, `Rot3`, `Pose2`, `Pose3`,
-symmetric positive-definite matrices and the symmetric 3x3 eigen-decomposition, i.e. the math
-layer parry and rapier are written against.
+Pure Cairo port of Dimforge's [glamx](https://github.com/dimforge/glamx) 0.3.1 on the
+[`fixed`](https://github.com/bal7hazar/fixed-cairo) Q32.32 scalar and
+[`glam`](https://github.com/bal7hazar/glam-cairo): `Rot2`, `Rot3`, `Pose2`, `Pose3`,
+`SdpMatrix2`, `SdpMatrix3` and `SymmetricEigen3`.
 
-Scope: [`docs/research/06-glamx-scope.md`](../../docs/research/06-glamx-scope.md).
-Progress: [`docs/PORTING_STATUS.md`](../../docs/PORTING_STATUS.md). Compatible with Cairo 2.19.4.
+```toml
+[dependencies]
+glamx = "0.3.0"
+```
+
+Compatible with Cairo 2.19.4.
 
 ## Gas
 
@@ -61,4 +65,15 @@ Sierra gas (`l2 gas`, what a transaction pays) and prover cost (steps, range che
 | `inverse_regular` | 27 650 | 226 | 56 |
 | `from_rotated_diagonal` | 35 550 | 299 | 66 |
 
+### `SymmetricEigen3`
+
+| op | l2 gas | steps | range checks |
+|---|---:|---:|---:|
+| `new` (generic) | 550 950 | 4 578 | 961 |
+| `new` (diagonal) | 57 960 | 484 | 62 |
+| `eigenvalues` (generic) | 507 470 | 4 205 | 873 |
+
 <!-- gas:end -->
+
+The committed snapshots are measured by
+[`scripts/bench.py`](../../scripts/bench.py) and checked in CI.

@@ -6,11 +6,11 @@ version = "0.3.0"
 edition = "2024_07"
 cairo-version = "2.19.4"
 license = "MIT"
-repository = "https://github.com/bal7hazar/glam-cairo"
+repository = "https://github.com/bal7hazar/glamx-cairo"
 
 [workspace.dependencies]
-fixed = { path = "packages/fixed", version = "0.3.0" }
-glam = { path = "packages/glam", version = "0.3.0" }
+fixed = "0.3.0"
+glam = "0.3.0"
 glamx = { path = "packages/glamx", version = "0.3.0" }
 snforge_std = "0.61.0"
 assert_macros = "2.19.4"

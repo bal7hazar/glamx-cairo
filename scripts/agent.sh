@@ -5,7 +5,7 @@
 # service restarts, every process of the cgroup is killed, `setsid nohup` children included.
 # A `systemd-run --user` unit lives under user@<uid>.service (needs `loginctl enable-linger`) and
 # survives. Falls back to `setsid nohup` where there is no systemd user manager.
-# See docs/ORCHESTRATOR.md.
+# Repository-level orchestration lives in glam-cairo's docs/ORCHESTRATOR.md.
 #
 # usage: scripts/agent.sh <task> <claude|codex> <model> <new|resume> <prompt> [codex-session-id] [effort]
 #        scripts/agent.sh status            # one line per known task

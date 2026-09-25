@@ -3,7 +3,7 @@ name = "refgen"
 version = "0.1.0"
 edition = "2021"
 publish = false
-description = "Golden-vector generator: glam-rs (f64) is the test oracle of the glam-cairo port"
+description = "Golden-vector generator for the glamx-cairo port"
 license = "MIT"
 
 # Own workspace: this crate is not part of the scarb workspace and must not be picked up by a

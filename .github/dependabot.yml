@@ -10,3 +10,4 @@ updates:
       interval: monthly
     ignore:
       - dependency-name: glam # pinned on purpose: it is the test oracle
+      - dependency-name: glamx # pinned on purpose: it is the test oracle

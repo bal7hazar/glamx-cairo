@@ -1,6 +1,6 @@
 [package]
 name = "benches"
-description = "Gas and step benchmarks for the fixed and glam packages (not published)"
+description = "Gas and step benchmarks for the glamx package (not published)"
 version.workspace = true
 edition.workspace = true
 cairo-version.workspace = true
@@ -26,90 +26,14 @@ scarb.workspace = true
 test = "snforge test"
 
 # One integration-test crate per bench file. snforge's cost per test grows with the size of the
-# compiled test program (58 tests: 28 s inside the 4 700-test crate, 1.3 s alone), so a single
-# crate over `tests/lib.cairo` made `scripts/bench.py` ~12x slower (990 s vs 82 s). Explicit
-# `[[test]]` targets replace the auto-detected the former `tests/lib.cairo` (deleted). `scripts/bench.py`
+# compiled test program, so unrelated modules must not share a single tests crate. Explicit
+# `[[test]]` targets replace the formerly auto-detected `tests/lib.cairo` (deleted). `scripts/bench.py`
 # fails when this list and `tests/bench_*.cairo` differ. `test-type = "integration"` gives each
 # crate access to `benches::harness` / `benches::alt`.
 
 [[test]]
-name = "bench_affine2"
-source-path = "tests/bench_affine2.cairo"
-test-type = "integration"
-
-[[test]]
-name = "bench_affine3"
-source-path = "tests/bench_affine3.cairo"
-test-type = "integration"
-
-[[test]]
-name = "bench_bvec2"
-source-path = "tests/bench_bvec2.cairo"
-test-type = "integration"
-
-[[test]]
-name = "bench_bvec3"
-source-path = "tests/bench_bvec3.cairo"
-test-type = "integration"
-
-[[test]]
-name = "bench_bvec4"
-source-path = "tests/bench_bvec4.cairo"
-test-type = "integration"
-
-[[test]]
-name = "bench_camera"
-source-path = "tests/bench_camera.cairo"
-test-type = "integration"
-
-[[test]]
 name = "bench_eigen3"
 source-path = "tests/bench_eigen3.cairo"
-test-type = "integration"
-
-[[test]]
-name = "bench_euler"
-source-path = "tests/bench_euler.cairo"
-test-type = "integration"
-
-[[test]]
-name = "bench_exp"
-source-path = "tests/bench_exp.cairo"
-test-type = "integration"
-
-[[test]]
-name = "bench_fixed"
-source-path = "tests/bench_fixed.cairo"
-test-type = "integration"
-
-[[test]]
-name = "bench_ivec2"
-source-path = "tests/bench_ivec2.cairo"
-test-type = "integration"
-
-[[test]]
-name = "bench_ivec3"
-source-path = "tests/bench_ivec3.cairo"
-test-type = "integration"
-
-[[test]]
-name = "bench_ivec4"
-source-path = "tests/bench_ivec4.cairo"
-test-type = "integration"
-
-[[test]]
-name = "bench_mat2"
-source-path = "tests/bench_mat2.cairo"
-test-type = "integration"
-
-[[test]]
-name = "bench_mat3"
-source-path = "tests/bench_mat3.cairo"
-test-type = "integration"
-
-[[test]]
-name = "bench_mat4"
-source-path = "tests/bench_mat4.cairo"
 test-type = "integration"
 
 [[test]]
@@ -120,11 +44,6 @@ test-type = "integration"
 [[test]]
 name = "bench_pose3"
 source-path = "tests/bench_pose3.cairo"
-test-type = "integration"
-
-[[test]]
-name = "bench_quat"
-source-path = "tests/bench_quat.cairo"
 test-type = "integration"
 
 [[test]]
@@ -140,49 +59,4 @@ test-type = "integration"
 [[test]]
 name = "bench_sdp"
 source-path = "tests/bench_sdp.cairo"
-test-type = "integration"
-
-[[test]]
-name = "bench_swizzles"
-source-path = "tests/bench_swizzles.cairo"
-test-type = "integration"
-
-[[test]]
-name = "bench_trig"
-source-path = "tests/bench_trig.cairo"
-test-type = "integration"
-
-[[test]]
-name = "bench_uvec2"
-source-path = "tests/bench_uvec2.cairo"
-test-type = "integration"
-
-[[test]]
-name = "bench_uvec3"
-source-path = "tests/bench_uvec3.cairo"
-test-type = "integration"
-
-[[test]]
-name = "bench_uvec4"
-source-path = "tests/bench_uvec4.cairo"
-test-type = "integration"
-
-[[test]]
-name = "bench_vec2"
-source-path = "tests/bench_vec2.cairo"
-test-type = "integration"
-
-[[test]]
-name = "bench_vec3"
-source-path = "tests/bench_vec3.cairo"
-test-type = "integration"
-
-[[test]]
-name = "bench_vec4"
-source-path = "tests/bench_vec4.cairo"
-test-type = "integration"
-
-[[test]]
-name = "bench_wide"
-source-path = "tests/bench_wide.cairo"
 test-type = "integration"

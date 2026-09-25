@@ -1,98 +1,56 @@
 # Changelog
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning policy:
-`docs/DESIGN.md` section 6 (any change of a numeric result is a MINOR bump).
+`docs/DESIGN.md` section 6.
 
 ## [Unreleased]
 
 ### Changed
-- Repositories renamed `glam.cairo` -> `glam-cairo`, `nalgebra.cairo` -> `nalgebra-cairo`,
-  `rapier.cairo` -> `rapier-cairo` (`https://github.com/bal7hazar/glam-cairo`; GitHub redirects
-  the old URLs). Package names (`fixed`, `glam`, `glamx`) and the registry are unchanged.
+
+- Repository split: `glamx` now lives in `bal7hazar/glamx-cairo` and consumes published
+  `fixed = "0.3.0"` and `glam = "0.3.0"` dependencies from the Scarb registry.
 
 ## [0.3.0] - 2026-09-23
 
-Division follows the Rust reference (`f64 /`), requested by `nalgebra-cairo` (41 accuracy tests of
-its LU / LDLT / Cholesky / QR / SVD regressed with the truncating division). **Numeric change**:
-every result that goes through `/`, `recip` or `from_ratio` may move by 1 ULP (up to 7 raw in
-`project_onto`). `glam` and `glamx` are released at 0.3.0 with it.
-
-### Added
-- `FixedTrait::div_nearest`, `FixedTrait::recip_nearest`: the correctly rounded quotient (to
-  nearest, ties to even), exact when representable (#42).
-- `fixed::wide::RecipNearest` / `RecipNearestTrait::{new, div_nearest}`: a divisor prepared once,
-  bit-identical to `x.div_nearest(d)`; cheaper from 3 quotients on (-12 % at 9) (#42).
+This version was released from the former monorepo at `bal7hazar/glam-cairo`.
 
 ### Changed
-- `Fixed / Fixed`, `FixedTrait::recip` and `FixedTrait::from_ratio` round to nearest, ties to
-  even, instead of truncating toward zero (`/` 3 740 -> 4 140 gas, `recip` 3 370 -> 3 670; 173
-  benches in 18 snapshots, at most +16.3 % on `Mat4::recip`). `rem`, `div_euclid`, `rem_euclid`
-  and `RecipTrait::mul` (`normalize*`, `inverse`) are unchanged. Measured accuracy: `tan` 2.22 ->
-  1.73 ULP, `atan2` 3.22 -> 2.78, `log` 1.88 -> 1.35, eigen3 eigenvalues 0.79 -> 0.64 ULP*|A|;
-  `atan` 2.67 -> 2.75, eigen3 residual 8.3 -> 9.6 (tolerance 16) (#42).
+
+- Division inherited from `fixed` now rounds to nearest, ties to even. Every glamx result that
+  goes through `/`, `recip` or `from_ratio` may move by 1 ULP; the symmetric-eigenvalue error
+  measured 0.64 ULP times the matrix scale, with residual tolerance 16 ULP.
 
 ## [0.2.0] - 2026-09-23
 
-API addition to `fixed` requested by `nalgebra.cairo` (generic code over one accumulator type);
-no numeric result changes. `glam` and `glamx` are re-released unchanged so that the three
-packages depend on the same `fixed` (pre-1.0, `^0.1.0` excludes `0.2.0`).
+This version was released from the former monorepo at `bal7hazar/glam-cairo`.
 
-### Added
-- `fixed::wide::Acc` (`AccTrait::{zero, add_prod, sub_prod, add, sub, narrow, sqrt, mul_narrow}`,
-  `Add` / `Sub` / `Neg`, `Into<W1..W16, Acc>`): an exact Q64.64 accumulator whose type does not
-  depend on the number of terms, bit-exact with the typed `W1..W16` chains (`add_prod` +200 gas
-  per product as `Wn.add(wide_mul(..))`; `sqrt` 4 860 vs 1 920 for `W2.sqrt` to keep its two
-  panic messages distinct). The absorbing-`W16` alternative (10x the cost) stays in
-  `benches::alt::wide` (#40).
-- `WideSqrt` for every `W1..W16` (was `W1..W3`) (#40).
+### Changed
+
+- Re-released unchanged so that `glamx`, `glam` and `fixed` use the same pre-1.0 dependency
+  version after `fixed::wide::Acc` was added.
 
 ## [0.1.0] - 2026-09-22
 
-First release: `fixed` (Q32.32 scalar, fused kernels, transcendentals), `glam` (glam-rs 0.33.8
-parity, 0 missing item) and `glamx` (Dimforge glamx 0.3.1 physics extensions), after the R1
-release audit (`docs/audits/`). Siblings pin `tag = "v0.1.0"`.
+This version was released from the former monorepo at `bal7hazar/glam-cairo`.
 
 ### Added
-- Research reports and benchmark prototype (`docs/research/`), design (`docs/DESIGN.md`) and
-  execution plan (`docs/PLAN.md`).
-- Workspace with the `fixed`, `glam` and `benches` packages; seed of the `Fixed` Q32.32 scalar.
-- Gas/step benchmark harness (`scripts/bench.py`, `gas/*.snap`) and CI.
-- `glam`: `BVec2`, `BVec3`, `BVec4` (#2).
-- `tools/refgen`: golden-vector generator using glam-rs 0.33.8 (f64) as the oracle, CI `golden` job (#3).
-- `fixed`: tier A scalar (`FixedTrait`, operators, rounding, `sqrt`, `FloatExt` helpers) and `wide` fused kernels with typed accumulators (#6).
-- `fixed`: exact-integer golden vectors for tier A and `wide` (117 generated tests, tolerance 0) (#7).
-- `glam`: `IVec2/3/4`, `UVec2/3/4` generated from one template (`tools/codegen/intvec.py`) (#5).
-- `fixed::trig`: loop-free `sin`, `cos`, `sin_cos`, `tan`, `asin`, `acos`, `atan`, `atan2` (about +-1 ULP, generator + bit-exact mirror in `scripts/gen_trig.py`) (#8).
-- `glam`: `Vec2`, `Vec3`, `Vec4` on the fused kernels, generated from `tools/codegen/fvec.py`, with glam-rs golden vectors (#9).
-- `glam`: swizzle traits for `Vec2/3/4`, `IVec2/3/4`, `UVec2/3/4` generated by `tools/codegen/swizzles.py` (#10).
-- `glam`: trigonometric methods of `Vec2` (`from_angle`, `to_angle`, `angle_to`, `rotate_towards`) and `Vec3` (`angle_between`, `rotate_x/y/z`) (#11).
-- `glam`: `Quat` core (Hamilton product fused, `mul_vec3`, `slerp`, axis-angle, rotation arcs) with glam-rs golden vectors (#12).
-- `glam`: `Mat2`, `Mat3`, `Mat4` (fused products, adjugate inverse with one shared division) generated from `tools/codegen/fmat.py`, with glam-rs golden vectors (#13).
-- `glam`: `Affine2` (fused composition, inverse with shared reciprocal) with glam-rs golden vectors (#14).
-- `glam`: `EulerRot` (24 orders) and Euler conversions of `Quat`, `Mat3`, `Mat4` as extension traits (#15).
-- `glam`: `camera` module (`rh`/`lh` view and OpenGL / Vulkan / DirectX projection constructors) with glam-rs golden vectors (#16).
-- `glam`: cross-type methods: `Mat3/Mat4::from_quat`, `Quat::from_mat3/4`, TRS compose / decompose, `Vec3::rotate_towards`, `Vec3::slerp` (#17).
-- `fixed::exp`: loop-free `exp`, `exp2`, `exp_m1`, `ln`, `log2`, `log10`, `ln_1p`, `log`, `powf` (monotone, <= ~2 ULP, generator + mirror in `scripts/gen_exp.py`) (#18).
-- Research report 06 (scope of the glamx physics extensions) and bootstrap of the `glamx` package (#19).
-- `glam`: `Affine3` (fused composition, adjugate inverse) plus the physics-oriented `Affine3RigidTrait` (`inverse_rigid`, `inv_mul`) (#21).
-- `scripts/api_parity.py` and the generated `docs/API_PARITY.md`: item-by-item parity with glam-rs 0.33.8, checked in CI (#20).
-- `glamx`: `Pose3` (fused `inv_mul`, point / vector transforms, nlerp) and the `Rot3` alias (#22).
-- `glamx`: `SdpMatrix2`, `SdpMatrix3` and the fused world-inertia kernel `from_rotated_diagonal` (`R D R^T`) (#23).
-- `glamx`: `Rot2` (unit complex rotation, fused composition, measured norm drift and renormalisation policy) (#24).
-- `glam`: parity closure of `Vec2/3/4`: element-wise `sin`/`cos`/`exp`/`ln`/`powf`/`sqrt`..., `step`, `smoothstep`, `saturate`, `From<BVecN>`, `from/to_homogeneous`, `Vec4::project` (#25).
-- `glam`: parity closure of `Quat` (`*Assign`, `slerp_long`, `from_affine3`), `Mat3/Mat4` x `Affine`, `Affine2::to_scale_angle_translation`, camera `look_*_affine3` / `look_*_quat`: `docs/API_PARITY.md` now reports 0 missing items (#26).
-- `glamx`: `Pose2` (fused composition, `inv_mul`, point / vector transforms) (#27).
-- `glamx`: `SymmetricEigen3` by scaled cyclic Jacobi with Rayleigh refinement (eigenvalues within 0.62 ULP * |A| on 7 513 test matrices; the closed form of upstream loses 5 orders of magnitude near repeated eigenvalues and stays in `benches::alt`) (#29).
-- Generated gas tables in the READMEs (`scripts/gas_tables.py`) (#28).
-- Deviation audit before `v0.1.0` (`docs/audits/R1-deviations.md`, `scripts/deviations.py`): 1 179 documented items classified against `docs/DESIGN.md` section 3, which gains 8 rows (reassociation, interpolation, `move_towards` snap, camera validation, integer overflow, alternative algorithms, API surface, degenerate inputs) (#30).
+
+- Initial `glamx` package mirroring Dimforge glamx 0.3.1.
+- `Pose3`, the `Rot3 = Quat` alias, fused `inv_mul`, point and vector transforms, and `nlerp`.
+- `SdpMatrix2`, `SdpMatrix3` and the fused world-inertia kernel
+  `from_rotated_diagonal` (`R D R^T`).
+- `Rot2`, including fused composition and explicit normalization policy.
+- `Pose2`, including fused composition, `inv_mul`, and point and vector transforms.
+- `SymmetricEigen3` using scaled cyclic Jacobi rotations with Rayleigh refinement.
+- Golden-vector generation against glamx 0.3.1, gas snapshots, generated gas tables, panic
+  coverage and Starknet consumer bytecode-size fixtures.
 
 ### Changed
-- `fixed::wide::is_unit2/3/4`: exact wide predicates behind `Vec2/3/4::is_normalized`, which is now total (`false` on long vectors instead of `'Fixed: overflow'`) and 50-56 % cheaper; `Vec3::rotate_towards` shares its cross product and norm (109 970 -> 102 380 gas) (#32).
-- Benchmarks: one snforge test crate per `tests/bench_<module>.cairo` (`[[test]]` targets checked by `scripts/bench.py`); the bench run is ~12x faster with identical snapshots; `bench.py check <filter>` (#33).
-- `glamx::eigen3`: one Jacobi rotation per metered loop iteration (a zero pivot no longer pays a rotation), diagonal inputs short-circuit, `eigenvalues` skips the eigenvector polish (within 1 ULP of `new`): generic `new` 586 320 -> 535 850 gas, `eigenvalues` -> 492 370, diagonal 106 420 -> 57 960. The rotation order is now (1,2),(2,3),(3,1): results change by a few ULP, every overall worst-case error bound improves (0.79 ULP*|A| on eigenvalues over 45 000 matrices) (#34).
-- `packages/consumer` (unpublished Starknet contract fixtures) and `scripts/bytecode_size.py`: class sizes tracked in `gas/bytecode.size` and CI; audit in `docs/audits/R1-bytecode-size.md` (kitchen-sink contract at 62 % of the CASM limit, inlining kept) (#31).
-- `glamx::Rot2::lerp` is the upstream component-wise blend (not normalised any more: the old result was exactly `lerp(..).normalize()`, antipodes at `s = 0.5` now give `(0, 0)`; 15 330 -> 4 880 gas); `Rot2::is_normalized` added (`fixed::wide::is_unit2`, 1 024 raw ULP band) (#35).
-- `glam::Quat`: `rotate_towards` reuses its dot / angle / interpolation work (162 720 -> 129 100 gas), `slerp` / `slerp_long` 124 060 -> 122 180 / 121 650, `is_normalized` and `is_near_identity` total on long inputs through `fixed::wide::is_unit4` (~2x cheaper); bit-exact. The intermittent `fuzz_mul_quat_drift` failure came from the test helper (quaternions up to 5 ULP off unit), now normalised (#36).
-- Panic coverage: `scripts/panic_coverage.py` maps every documented `(item, panic message)` pair to a `#[should_panic]` test and runs in CI; 324 tests added so that no documented panic is untested; doc template on the vector `IndexView` impls (#37).
-- Deviation wording fixes from the audit: stale camera module doc, overflow / division-by-zero deviations documented on `fixed`, `Mat*::abs`, the `wide` kernels and the `glamx` items, non-semantic notes moved out of `#### Deviations` (#38).
-- Panic-coverage follow-up: the 21 `Quat` panic tests, unreachable documented panics removed and wrong native messages fixed on `Fixed::move_towards`, `SdpMatrix*`, camera `orthographic` / `frustum` (#39).
+
+- `SymmetricEigen3` runs one Jacobi rotation per metered loop iteration, short-circuits diagonal
+  inputs and lets `eigenvalues` skip eigenvector polishing. Generic `new` fell from 586,320 to
+  535,850 gas at the time; rotation order changed to `(1,2), (2,3), (3,1)` and improved all
+  measured error bounds.
+- `Rot2::lerp` now matches upstream's unnormalized component-wise blend; `Rot2::is_normalized`
+  was added using `fixed::wide::is_unit2`.
+- Deviation documentation and exact panic-path coverage were completed for all glamx items.

@@ -21,29 +21,20 @@ jobs:
       - uses: software-mansion/setup-scarb@2a96b748888e3329ee44ac9ac073d930e692b3cd # v1.6.2
       - run: scarb fmt --check --workspace
       - run: scarb lint --workspace --test --deny-warnings
-      # docs/API_PARITY.md must match the Cairo sources (regenerate with scripts/api_parity.py).
-      - run: python3 scripts/api_parity.py --check
-      # README gas tables must match gas/*.snap (regenerate with scripts/gas_tables.py).
       - run: python3 scripts/gas_tables.py --check
-      # Every documented panic of a public item has a should_panic test on that item.
       - run: python3 scripts/panic_coverage.py --check
+      - run: python3 scripts/gen_eigen3.py emit --check
 
   test:
-    name: Test ${{ matrix.package }}
+    name: Test glamx
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        package: [fixed, glam, glamx]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: software-mansion/setup-scarb@2a96b748888e3329ee44ac9ac073d930e692b3cd # v1.6.2
       - uses: foundry-rs/setup-snfoundry@16e23ddd0e2845f38727c92f4b913a7b728cda9e # v6.0.0
-      - run: scarb build -p ${{ matrix.package }}
-      # Fuzz properties are compiled with runs: 128 for local runs; CI keeps a deterministic
-      # 32-run smoke of every property so the job stays under the runner's time budget.
+      - run: scarb build -p glamx
       - name: Test
-        run: snforge test -p ${{ matrix.package }} --fuzzer-runs 32 --fuzzer-seed 1
+        run: snforge test -p glamx --fuzzer-runs 32 --fuzzer-seed 1
 
   bench:
     name: Build, benches, gas snapshots
@@ -52,15 +43,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: software-mansion/setup-scarb@2a96b748888e3329ee44ac9ac073d930e692b3cd # v1.6.2
       - uses: foundry-rs/setup-snfoundry@16e23ddd0e2845f38727c92f4b913a7b728cda9e # v6.0.0
-      # No separate `scarb build --workspace`: snforge compiles the benches package and its
-      # dependencies (fixed, glam, glamx), and the `test` jobs build each package already.
-      # setup-scarb caches the registry and the target dirs (keyed on Scarb.lock/.tool-versions).
-      # Fails on any gas/step change that is not committed in gas/*.snap.
       - name: Check gas snapshots
         run: |
           set -o pipefail
           python3 scripts/bench.py check | tee gas_report.md
-      # Fails on any class size change of packages/consumer not committed in gas/bytecode.size.
       - name: Check bytecode size
         run: |
           set -o pipefail
@@ -74,7 +60,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      # The stable Rust toolchain is preinstalled on ubuntu-latest.
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
@@ -84,7 +69,6 @@ jobs:
           key: refgen-${{ runner.os }}-${{ hashFiles('tools/refgen/Cargo.lock') }}
       - name: Generator unit tests
         run: cargo test --locked --manifest-path tools/refgen/Cargo.toml
-      # Fails when a committed packages/*/tests/golden_*.cairo differs from the generator output.
       - name: Check golden vectors
         run: cargo run --locked --manifest-path tools/refgen/Cargo.toml -- check
 
