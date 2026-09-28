@@ -102,7 +102,7 @@ jobs:
       - name: Measure
         run: |
           set -eu
-          : > /tmp/empty.toml
+          printf '[gates]\nmax_lines = 40000\n' > /tmp/empty.toml
           measure() { # variant dir round
             (cd "$2" && python3 scripts/consumer_cost.py --config /tmp/empty.toml --package glamx --repeat 3 --report-only --modules --json "/tmp/cost_$1_$3.json" > "/tmp/cost_$1_$3.md")
           }
