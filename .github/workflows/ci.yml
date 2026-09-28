@@ -90,11 +90,13 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: software-mansion/setup-scarb@2a96b748888e3329ee44ac9ac073d930e692b3cd # v1.6.2
-      - name: Measure the published crates (cold builds, one after the other)
+      - name: Consumer cost script (self-test, no build)
+        run: python3 scripts/consumer_cost.py --self-test
+      - name: Measure the published crates (cold builds, one after the other, median of 3)
         run: |
           set -o pipefail
           status=0
-          python3 scripts/consumer_cost.py --modules --json consumer_cost.json | tee consumer_cost.md || status=$?
+          python3 scripts/consumer_cost.py --repeat 3 --modules --json consumer_cost.json | tee consumer_cost.md || status=$?
           { echo "### Consumer cost"; echo; cat consumer_cost.md; } >> "$GITHUB_STEP_SUMMARY"
           exit "$status"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
