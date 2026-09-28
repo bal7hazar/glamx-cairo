@@ -355,7 +355,8 @@ pub trait Pose3Trait {
     /// * Never: built on `Fixed::abs_diff_eq`, an `i128` difference that never panics (R1
     ///   panic-coverage audit, escalation 1).
     /// #### Deviations
-    /// * An inherent method with an explicit tolerance, as `glam_core::quat::QuatTrait::abs_diff_eq`
+    /// * An inherent method with an explicit tolerance, as
+    /// `glam_core::quat::QuatTrait::abs_diff_eq`
     ///   (there is no `approx` crate and no default epsilon).
     fn abs_diff_eq(self: Pose3, rhs: Pose3, max_abs_diff: Fixed) -> bool;
 }

@@ -58,7 +58,8 @@ fn drift(q: Quat) -> i64 {
     }
 }
 
-// The composed glamx expressions (the `benches::alt::pose3` forms), built on `glam_core::quat` only.
+// The composed glamx expressions (the `benches::alt::pose3` forms), built on `glam_core::quat`
+// only.
 
 fn composed_transform_point(p: Pose3, v: Vec3) -> Vec3 {
     p.rotation.mul_vec3(v) + p.translation

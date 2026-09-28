@@ -224,7 +224,8 @@ pub trait Rot2Trait {
     /// * Never.
     /// #### Deviations
     /// * The threshold is re-derived for Q32.32: `|length_squared - 1| <= 1024` raw ULP
-    ///   (inclusive), about `2.4e-7`, where glamx uses `< 2e-4`, as `glam_core::Vec2::is_normalized`.
+    ///   (inclusive), about `2.4e-7`, where glamx uses `< 2e-4`, as
+    ///   `glam_core::Vec2::is_normalized`.
     ///   The squared length of the output of `normalize` is within 5 ULP of 1, so the margin is a
     ///   hundredfold.
     /// * The exact wide sum of squares is compared without narrowing, so long rotations return

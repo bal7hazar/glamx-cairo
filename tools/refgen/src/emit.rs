@@ -437,7 +437,7 @@ mod tests {
     const SPEC: &str = r#"
 module = "demo"
 package = "glam"
-imports = ["glam::mat4::Mat4Trait"]
+imports = ["glam_core::mat4::Mat4Trait"]
 
 [[function]]
 name = "mul_vec4"
@@ -483,7 +483,7 @@ justification = "disabled entries need no oracle."
         assert!(first
             .lines()
             .all(|l| l.len() <= MAX_LINE && l.trim_end() == l));
-        assert!(first.contains("use glam::mat4::{Mat4, Mat4Trait};\nuse glam::vec4::Vec4;\n"));
+        assert!(first.contains("use glam_core::mat4::{Mat4, Mat4Trait};\nuse glam_core::vec4::Vec4;\n"));
         // Tables are glued to the previous item, tests are separated by a blank line.
         assert!(first.contains(
             "}\n// demo::mul_vec4: 4 cases, tolerance 4 ULP - dim ULP.\n#[cairofmt::skip]\n"

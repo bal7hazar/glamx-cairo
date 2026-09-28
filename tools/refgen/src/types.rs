@@ -189,7 +189,7 @@ impl Ty {
             Ty::I64 | Ty::I32 | Ty::U32 | Ty::Bool | Ty::Tuple(_) => None,
             other => {
                 let name = other.cairo();
-                Some(format!("glam::{}::{}", name.to_lowercase(), name))
+                Some(format!("glam_core::{}::{}", name.to_lowercase(), name))
             }
         }
     }

@@ -4,7 +4,7 @@
 
 module = "rot2"
 package = "glamx"
-imports = ["glam::mat2::Mat2", "glam::vec2::vec2", "glamx::rot2::Rot2Trait"]
+imports = ["glam_core::mat2::Mat2", "glam_core::vec2::vec2", "glamx::rot2::Rot2Trait"]
 
 [types.Vec2]
 path = "glamx::rot2::Rot2"
