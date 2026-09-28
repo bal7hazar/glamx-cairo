@@ -1,0 +1,10 @@
+# Gates of scripts/consumer_cost.py (copied unchanged from nalgebra-cairo bff3462; see the docstring
+# at the top of that script). The values are the defaults of the package granularity rule: a
+# published crate has at most 40,000 library lines, and an empty consumer of it adds at most
+# 5 s / 1 GB to the no-dependency cold build.
+[gates]
+max_lines = 40000
+max_seconds = 5
+max_gb = 1
+closure_seconds = 15
+closure_gb = 3
