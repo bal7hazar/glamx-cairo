@@ -11,8 +11,8 @@ use core::ops::MulAssign;
 use fixed::fixed::{Fixed, FixedTrait};
 use fixed::trig::TrigTrait;
 use fixed::wide::{dot2, is_unit2, mul_sub, norm2, norm2_squared, normalize2};
-use glam::mat2::Mat2;
-use glam::vec2::Vec2;
+use glam_core::mat2::Mat2;
+use glam_core::vec2::Vec2;
 
 /// A 2D rotation represented as the unit complex number `re + im * i`, where `re` is the cosine
 /// and `im` the sine of its angle.
@@ -224,7 +224,7 @@ pub trait Rot2Trait {
     /// * Never.
     /// #### Deviations
     /// * The threshold is re-derived for Q32.32: `|length_squared - 1| <= 1024` raw ULP
-    ///   (inclusive), about `2.4e-7`, where glamx uses `< 2e-4`, as `glam::Vec2::is_normalized`.
+    ///   (inclusive), about `2.4e-7`, where glamx uses `< 2e-4`, as `glam_core::Vec2::is_normalized`.
     ///   The squared length of the output of `normalize` is within 5 ULP of 1, so the margin is a
     ///   hundredfold.
     /// * The exact wide sum of squares is compared without narrowing, so long rotations return

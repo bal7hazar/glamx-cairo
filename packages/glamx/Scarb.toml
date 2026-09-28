@@ -10,7 +10,7 @@ readme = "README.md"
 
 [dependencies]
 fixed.workspace = true
-glam.workspace = true
+glam_core.workspace = true
 
 [dev-dependencies]
 snforge_std.workspace = true

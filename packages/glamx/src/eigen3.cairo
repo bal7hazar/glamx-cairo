@@ -83,8 +83,8 @@ use fixed::wide::{
     RecipTrait, W1, WideAdd, WideMul, WideNarrow, WideSqrt, WideSub, dot3, norm2, wide_from,
     wide_mul,
 };
-use glam::mat3::{Mat3, Mat3Trait};
-use glam::vec3::{Vec3, Vec3Trait};
+use glam_core::mat3::{Mat3, Mat3Trait};
+use glam_core::vec3::{Vec3, Vec3Trait};
 use crate::sdp::SdpMatrix3;
 
 /// The eigen-decomposition of a symmetric 3x3 matrix: `A = V diag(eigenvalues) V^T`.
@@ -212,7 +212,7 @@ pub impl SymmetricEigen3Impl of SymmetricEigen3Trait {
 pub trait Mat3ExtTrait {
     /// Swaps the columns `a` and `b` of this matrix.
     ///
-    /// Mirrors `glamx::MatExt::swap_cols` for `glam::Mat3`.
+    /// Mirrors `glamx::MatExt::swap_cols` for `glam_core::Mat3`.
     /// #### Panics
     /// * `'Mat3: index out of bounds'` if `a` or `b` is greater than 2.
     /// #### Deviations
@@ -224,7 +224,7 @@ pub trait Mat3ExtTrait {
     /// Implementation notes:
     /// * As [`SymmetricEigen3Trait::new`].
     ///
-    /// Mirrors `glamx::MatExt::symmetric_eigen` for `glam::Mat3`.
+    /// Mirrors `glamx::MatExt::symmetric_eigen` for `glam_core::Mat3`.
     /// #### Panics
     /// * As [`SymmetricEigen3Trait::new`].
     /// #### Deviations
@@ -236,7 +236,7 @@ pub trait Mat3ExtTrait {
     /// Implementation notes:
     /// * As [`SymmetricEigen3Trait::eigenvalues`].
     ///
-    /// Mirrors `glamx::MatExt::symmetric_eigenvalues` for `glam::Mat3`.
+    /// Mirrors `glamx::MatExt::symmetric_eigenvalues` for `glam_core::Mat3`.
     /// #### Panics
     /// * As [`SymmetricEigen3Trait::new`].
     /// #### Deviations

@@ -5,9 +5,9 @@
 
 use fixed::fixed::Fixed;
 use fixed::wide::{RecipTrait, det3, dot3, mul_sub};
-use glam::mat3::{Mat3, Mat3Trait};
-use glam::quat::Quat;
-use glam::vec3::{Vec3, Vec3Trait};
+use glam_core::mat3::{Mat3, Mat3Trait};
+use glam_core::quat::Quat;
+use glam_core::vec3::{Vec3, Vec3Trait};
 use glamx::sdp::{SdpMatrix3, SdpMatrix3Trait};
 
 /// Alternative to `SdpMatrix3::from_rotated_diagonal`. The literal parry

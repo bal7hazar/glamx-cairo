@@ -12,10 +12,10 @@
 use benches::alt::pose3 as alt;
 use benches::harness::{bb, sink};
 use fixed::fixed::Fixed;
-use glam::mat4::Mat4;
-use glam::quat::Quat;
-use glam::vec3::Vec3;
-use glam::vec4::Vec4;
+use glam_core::mat4::Mat4;
+use glam_core::quat::Quat;
+use glam_core::vec3::Vec3;
+use glam_core::vec4::Vec4;
 use glamx::pose3::{Pose3, Pose3Trait, Rot3Pose3Trait};
 
 /// A unit quaternion: 0.7 rad around the normalized (1, 2, 3).

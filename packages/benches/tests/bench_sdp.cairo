@@ -9,11 +9,11 @@
 use benches::alt::sdp as alt;
 use benches::harness::{bb, sink};
 use fixed::fixed::Fixed;
-use glam::mat2::Mat2;
-use glam::mat3::Mat3;
-use glam::quat::Quat;
-use glam::vec2::Vec2;
-use glam::vec3::Vec3;
+use glam_core::mat2::Mat2;
+use glam_core::mat3::Mat3;
+use glam_core::quat::Quat;
+use glam_core::vec2::Vec2;
+use glam_core::vec3::Vec3;
 use glamx::sdp::{SdpMatrix2, SdpMatrix2Trait, SdpMatrix3, SdpMatrix3Trait};
 
 

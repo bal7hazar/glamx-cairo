@@ -10,7 +10,7 @@ repository = "https://github.com/bal7hazar/glamx-cairo"
 
 [workspace.dependencies]
 fixed = "0.4.0"
-glam = "0.4.0"
+glam_core = "0.4.1"
 glamx = { path = "packages/glamx", version = "0.4.0" }
 snforge_std = "0.61.0"
 assert_macros = "2.19.4"

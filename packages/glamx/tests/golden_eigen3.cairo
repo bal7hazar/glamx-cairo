@@ -4,8 +4,8 @@
 // Regenerate: cargo run --manifest-path tools/refgen/Cargo.toml -- gen eigen3
 
 use fixed::Fixed;
-use glam::mat3::Mat3;
-use glam::vec3::Vec3;
+use glam_core::mat3::Mat3;
+use glam_core::vec3::Vec3;
 use glamx::eigen3::{Mat3ExtTrait, SymmetricEigen3Trait as E};
 use glamx::sdp::SdpMatrix3Trait as S3;
 

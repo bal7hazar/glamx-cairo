@@ -1,9 +1,9 @@
 //! The simulation logic shared by the contracts: plain functions over the library types.
 
 use fixed::{Fixed, FixedTrait, ONE, TrigTrait, ZERO};
-use glam::camera::rh::proj::opengl;
-use glam::camera::rh::view::look_at_mat4;
-use glam::{
+use glam_core::camera::rh::proj::opengl;
+use glam_core::camera::rh::view::look_at_mat4;
+use glam_core::{
     EulerRot, Mat3, Mat3Trait, Mat4, Mat4Trait, Quat, QuatEulerTrait, QuatTrait, Vec2, Vec2Trait,
     Vec3, Vec3Trait,
 };

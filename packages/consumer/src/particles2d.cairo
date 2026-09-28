@@ -3,7 +3,7 @@
 #[starknet::contract]
 pub mod Particles2d {
     use fixed::{Fixed, FixedTrait};
-    use glam::{Vec2, Vec2Trait};
+    use glam_core::{Vec2, Vec2Trait};
     use glamx::Pose2;
     use starknet::storage::{Map, StorageMapReadAccess, StorageMapWriteAccess};
     use crate::sim::{self, Particle};

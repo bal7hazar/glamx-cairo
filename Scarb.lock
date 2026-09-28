@@ -6,7 +6,7 @@ name = "benches"
 version = "0.4.0"
 dependencies = [
  "fixed",
- "glam",
+ "glam_core",
  "glamx",
  "snforge_std",
 ]
@@ -16,7 +16,7 @@ name = "consumer"
 version = "0.4.0"
 dependencies = [
  "fixed",
- "glam",
+ "glam_core",
  "glamx",
 ]
 
@@ -27,10 +27,10 @@ source = "registry+https://scarbs.xyz/"
 checksum = "sha256:a8f7ec541b8cc85894688ae9008cddb87cccc55a024b04b35f7fd3716d715064"
 
 [[package]]
-name = "glam"
-version = "0.4.0"
+name = "glam_core"
+version = "0.4.1"
 source = "registry+https://scarbs.xyz/"
-checksum = "sha256:d3b4327f57b012dfa848e948ca7faee8dd10f475eaaa62e8456dcb640c4835fc"
+checksum = "sha256:86351a73e26bfd6bbdd7548775e9377b33ed08a9616a249117942ccb29b7c75f"
 dependencies = [
  "fixed",
 ]
@@ -40,7 +40,7 @@ name = "glamx"
 version = "0.4.0"
 dependencies = [
  "fixed",
- "glam",
+ "glam_core",
  "snforge_std",
 ]
 

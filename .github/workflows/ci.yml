@@ -80,6 +80,39 @@ jobs:
       - uses: software-mansion/setup-scarb@2a96b748888e3329ee44ac9ac073d930e692b3cd # v1.6.2
       - run: scarb doc --workspace --disable-remote-linking
 
+  # SCRATCH (PK-G4 part 2, never merged): the empty consumer of glamx with (a) the glam facade and
+  # (b) glam_core alone, measured one after the other on the same runner, twice in opposite order.
+  variant-cost:
+    name: Variant cost (a) glam vs (b) glam_core
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: software-mansion/setup-scarb@2a96b748888e3329ee44ac9ac073d930e692b3cd # v1.6.2
+      - name: Build variant (a) from variant (b) by the inverse substitution
+        run: |
+          set -eu
+          cp -r "$GITHUB_WORKSPACE" /tmp/variant_a
+          cd /tmp/variant_a
+          grep -rlE '\bglam_core::' packages --include=*.cairo | xargs sed -i -E 's/\bglam_core::/glam::/g'
+          sed -i 's/^glam_core = "0.4.1"/glam = "0.4.1"/' Scarb.toml
+          sed -i 's/^glam_core.workspace = true/glam.workspace = true/' packages/*/Scarb.toml
+          rm -f Scarb.lock
+          scarb build --workspace
+      - name: Measure
+        run: |
+          set -eu
+          : > /tmp/empty.toml
+          measure() { # variant dir round
+            (cd "$2" && python3 scripts/consumer_cost.py --config /tmp/empty.toml --package glamx --repeat 3 --report-only --modules --json "/tmp/cost_$1_$3.json" > "/tmp/cost_$1_$3.md")
+          }
+          measure a /tmp/variant_a 1
+          measure b "$GITHUB_WORKSPACE" 1
+          measure b "$GITHUB_WORKSPACE" 2
+          measure a /tmp/variant_a 2
+          for f in /tmp/cost_*.md; do echo "### $f"; cat "$f"; done | tee -a "$GITHUB_STEP_SUMMARY"
+          for f in /tmp/cost_*.json; do echo "== $f"; python3 -c "import json,sys; print(json.dumps(json.load(open(sys.argv[1])), indent=1))" "$f"; done
+
   # Package granularity rule (PK-G): the published crates against the size gates (library lines,
   # cold-build time and memory an empty consumer adds), scripts/consumer_cost.py, configured by
   # consumer_cost.toml.

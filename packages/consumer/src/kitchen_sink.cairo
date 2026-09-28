@@ -4,7 +4,7 @@
 #[starknet::contract]
 pub mod KitchenSink {
     use fixed::{ExpTrait, Fixed, FixedTrait, TrigTrait};
-    use glam::{Mat3, Mat4, Quat, Vec2, Vec2Trait, Vec3};
+    use glam_core::{Mat3, Mat4, Quat, Vec2, Vec2Trait, Vec3};
     use glamx::{Pose2, Pose3, SymmetricEigen3};
     use starknet::storage::{Map, StorageMapReadAccess, StorageMapWriteAccess};
     use crate::sim::{self, Body, Particle};
