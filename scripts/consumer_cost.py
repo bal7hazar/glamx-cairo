@@ -4,10 +4,14 @@
 The rule (package granularity, programme decision 2026-09-28): a published crate has
 
   * at most 40,000 library lines (inline tests excluded);
-  * an EMPTY consumer of the crate alone (one trivial function that does not name the
-    dependency) that adds at most 5 s and 1 GB (peak RSS, cold build) to the no-dependency build;
-  * a documented "typical closure" per product (the crates a consumer of that product pulls in
-    together) that stays under 15 s and 3 GB added.
+  * a MARGINAL cost of at most 5 s and 1 GB (peak RSS, cold build): an EMPTY consumer of the crate
+    (one trivial function that does not name the dependency) minus an empty consumer of the
+    crate's DIRECT dependencies together;
+  * a declared "typical closure" per product (the crates a consumer of that product pulls in
+    together, workspace or registry crates) that stays under 15 s and 3 GB over the no-dependency
+    build;
+  * a FACADE (a crate that only re-exports others) or a product is judged on the closure budget
+    only: its own consumer is checked against 15 s / 3 GB, not against lines and marginal cost.
 
 The script is repository-agnostic (no crate name, no path): it only needs `scarb` on the PATH and
 a workspace (or `--manifest-path`). Python 3.8+, standard library only.
@@ -23,32 +27,51 @@ Definitions
                attributes right above). Code behind Scarb features (`#[cfg(feature: 'x')]`) is
                counted: the gate is about the crate, not one configuration. The non-blank count is
                reported too (`--lines-metric nonblank` gates on it instead).
-  added cost   wall seconds and peak RSS (GB = 10^9 bytes) of `scarb build` of a consumer crate
-               minus the same for a baseline consumer with no dependency; each one cold
-               (`SCARB_INCREMENTAL=false`, fresh `target/`, dependencies fetched beforehand) in a
-               temporary directory, one after the other, `--repeat N` takes the median. The consumer
+  cost         wall seconds and peak RSS (GB = 10^9 bytes) of `scarb build` of a consumer crate; each one
+               cold (`SCARB_INCREMENTAL=false`, fresh `target/`, dependencies fetched beforehand) in
+               a temporary directory, one after the other, `--repeat N` takes the median. The consumer
                has the same `[lib]` targets as the crate (read from its manifest) and depends on it
                by path, with default features, or with `--features a,b` / `--no-default-features`.
                The wall time includes any wait of a wrapper around `scarb` (a shared-build lock,
-               for instance): run under that lock instead (`flock LOCK python3 ...`).
-  closure      `--closure NAME=crate1,crate2,..` (repeatable) or a `[closures]` table of the
-               config file: one consumer depending on all the listed crates, checked against the
-               closure budget.
+               for instance): run under that lock instead (`flock LOCK python3 ...`). A manifest
+               that two consumers share is built once.
+  over baseline  cost(consumer of the crate) - cost(baseline consumer with no dependency).
+  direct deps  the crate's `[dependencies]` as `scarb metadata` resolves them (workspace
+               inheritance applied): workspace path dependencies by path, registry ones by the same
+               version requirement, both with the features the crate declares; dev-dependencies,
+               `core` and `starknet` excluded.
+  marginal     cost(consumer of the crate) - cost(consumer of its direct deps together): what the
+               crate adds on top of what it pulls in. Time in seconds, memory in GB (never below 0).
+               A crate without dependency: marginal = over baseline. GATE 2 USES THIS FIGURE; the
+               over-baseline figures stay in the table and in the JSON.
+  facade       a crate judged on the closure budget only (`--facade NAME`, repeatable, or `facades`
+               in the config): reported with its lines and marginal cost, its over-baseline cost is
+               checked against the closure budget, lines and marginal cost are not gated.
+  closure      `--closure NAME=m1,m2,..` (repeatable) or a `[closures]` table of the config file:
+               one consumer depending on all the members, checked against the closure budget. A
+               member is a workspace crate by name (`nalgebra_glam`, features from `[crates.NAME]`)
+               or a registry crate with its version requirement (`glam@0.4.1`, `fixed@0.4.0`,
+               `simba@^0.2`), written as `name = "req"` in the consumer manifest.
 
 Usage
   python3 scripts/consumer_cost.py --lines-only --report-only        # fast proxy, no build
   python3 scripts/consumer_cost.py --json consumer_cost.json         # gates, exit 1 on failure
   python3 scripts/consumer_cost.py --package a --features fast --repeat 3
-  python3 scripts/consumer_cost.py --closure product=a,b --report-only --modules
+  python3 scripts/consumer_cost.py --closure product=a,glam@0.4.1 --facade umbrella --report-only
+  python3 scripts/consumer_cost.py --dry-run          # print the consumer manifests, build nothing
+  python3 scripts/consumer_cost.py --self-test        # checks of the script's own logic, no scarb
 
 Config (`consumer_cost.toml` at the workspace root, or `--config PATH`; flags win; every key optional)
   [gates]     max_lines = 40000, max_seconds = 5, max_gb = 1, closure_seconds = 15, closure_gb = 3
-  [closures]  product = ["crate1", "crate2"]
+  facades = ["umbrella"]                                    # top-level key: judged on the closure budget
+  [closures]  product = ["crate1", "registry_crate@1.2.3"]
   [crates.NAME]   features = ["a"], default_features = false   # configuration to measure
 
 Exit status: 1 if any gate fails (unless `--report-only`), 2 on a usage or build error.
-Output: a markdown table on stdout (crate, version, lines, added s, added GB, verdict), the JSON
-with `--json PATH` (raw measures, medians, per top-level module lines, gates, verdicts).
+Every `scarb` call passes `--manifest-path` BEFORE the subcommand (scarb 2.19 rejects it after).
+Output: a markdown table on stdout (crate, version, lines, over-baseline s / GB, marginal s / GB,
+verdict), the JSON with `--json PATH` (raw measures, medians, direct deps, per top-level module
+lines, gates, verdicts).
 """
 
 import argparse
@@ -109,10 +132,35 @@ def run(cmd, cwd=None, env=None, check=True):
     return p
 
 
-def workspace_packages(manifest_path):
-    cmd = ["scarb", "metadata", "--format-version", "1", "--no-deps"]
-    if manifest_path:
-        cmd += ["--manifest-path", manifest_path]
+def scarb_cmd(scarb, manifest_path, *sub):
+    """`scarb [--manifest-path X] SUB..`: the global option goes BEFORE the subcommand."""
+    return [scarb] + (["--manifest-path", manifest_path] if manifest_path else []) + list(sub)
+
+
+NOT_DIRECT = {"core", "starknet"}  # the corelib and the platform crate are in every consumer
+
+
+def direct_dependencies(p):
+    """The `[dependencies]` of a metadata package (no dev-dependencies, no corelib / starknet)."""
+    out = []
+    for d in p["dependencies"]:
+        if d.get("kind") is not None or d["name"] in NOT_DIRECT:
+            continue
+        dep = {"name": d["name"], "features": sorted(d.get("features") or []),
+               "default_features": d.get("default_features", True)}
+        source = d["source"]
+        if source.startswith("path+file://"):
+            dep["root"] = os.path.dirname(source[len("path+file://"):])
+        elif source.startswith("registry+"):
+            dep["version"] = d["version_req"]
+        else:
+            sys.exit(f"error: `{p['name']}`: dependency `{d['name']}` from `{source}` is not supported")
+        out.append(dep)
+    return sorted(out, key=lambda d: d["name"])
+
+
+def workspace_packages(scarb, manifest_path):
+    cmd = scarb_cmd(scarb, manifest_path, "metadata", "--format-version", "1", "--no-deps")
     meta = json.loads(run(cmd).stdout)
     pkgs = []
     for p in meta["packages"]:
@@ -129,6 +177,7 @@ def workspace_packages(manifest_path):
                 "features": sorted(manifest.get("features", {})),
                 "lib_source": lib[0]["source_path"] if lib else None,
                 "lib_table": manifest.get("lib"),
+                "deps": direct_dependencies(p),
             }
         )
     return meta["workspace"]["root"], pkgs
@@ -312,7 +361,8 @@ def toml_str(s):
 
 
 def consumer_manifest(deps, edition, lib_table, name="cost_consumer"):
-    """A consumer crate: one trivial function, the dependencies by path (`deps`: list of dicts)."""
+    """A consumer crate: one trivial function, the dependencies (`deps`: list of dicts with a
+    `root` (path dependency) or a `version` (registry requirement), features, default_features)."""
     lines = ["[package]", f'name = "{name}"', 'version = "0.1.0"']
     if edition:
         lines.append(f"edition = {toml_str(edition)}")
@@ -321,7 +371,13 @@ def consumer_manifest(deps, edition, lib_table, name="cost_consumer"):
         lines += [f"{k} = {json.dumps(v)}" for k, v in lib_table.items()]
     lines.append("\n[dependencies]")
     for d in deps:
-        opts = [f"path = {toml_str(d['root'])}"]
+        if "root" in d:
+            opts = [f"path = {toml_str(d['root'])}"]
+        elif d["default_features"] and not d["features"]:
+            lines.append(f"{d['name']} = {toml_str(d['version'])}")
+            continue
+        else:
+            opts = [f"version = {toml_str(d['version'])}"]
         if not d["default_features"]:
             opts.append("default-features = false")
         if d["features"]:
@@ -349,7 +405,8 @@ def timed_build(cmd, cwd, env):
 
 
 def measure(label, manifest, repeat, scarb):
-    """Cold `scarb build` of the consumer manifest: (median seconds, median peak bytes, samples)."""
+    """Cold `scarb build` of the consumer manifest: (median seconds, median peak bytes, samples).
+    Runs in the temporary directory, so no `--manifest-path` is needed."""
     env = dict(os.environ, SCARB_INCREMENTAL="false")
     secs, rsss = [], []
     with tempfile.TemporaryDirectory(prefix="consumer_cost_") as tmp:
@@ -383,17 +440,97 @@ def verdict(fails):
     return "FAIL: " + ", ".join(fails) if fails else "ok"
 
 
+def parse_member(spec):
+    """A closure member: `name` (workspace crate) or `name@requirement` (registry crate)."""
+    name, at, req = spec.partition("@")
+    if not name or (at and not req):
+        sys.exit(f"error: bad closure member `{spec}` (expected `name` or `name@version`)")
+    return name, (req if at else None)
+
+
+def judge(r, gates, facade):
+    """The failed gates of one result row."""
+    fails = []
+
+    def over(seconds, gb, label_s, label_gb, tag=""):
+        if seconds > label_s:
+            fails.append(f"{tag}time > {label_s:g} s")
+        if gb > label_gb:
+            fails.append(f"{tag}memory > {label_gb:g} GB")
+
+    if r.get("closure"):
+        if "added_seconds" in r:
+            over(r["added_seconds"], r["added_gb"], gates["closure_seconds"], gates["closure_gb"])
+    elif facade:  # gate 3 only: the consumer of the facade is its closure
+        if "added_seconds" in r:
+            over(r["added_seconds"], r["added_gb"], gates["closure_seconds"], gates["closure_gb"],
+                 "closure ")
+    else:
+        if r["gated_lines"] > gates["max_lines"]:
+            fails.append(f"lines > {gates['max_lines']:,.0f}")
+        if "marginal_seconds" in r:
+            over(r["marginal_seconds"], r["marginal_gb"], gates["max_seconds"], gates["max_gb"],
+                 "marginal ")
+    return fails
+
+
+def self_test():
+    """Checks of the pure logic (no scarb, no build); exit status 0 when everything holds."""
+    assert parse_member("nalgebra_glam") == ("nalgebra_glam", None)
+    assert parse_member("glam@0.4.1") == ("glam", "0.4.1")
+    assert parse_member("simba@^0.2") == ("simba", "^0.2")
+    assert scarb_cmd("scarb", "X/Scarb.toml", "metadata", "--no-deps") == [
+        "scarb", "--manifest-path", "X/Scarb.toml", "metadata", "--no-deps"]
+    assert scarb_cmd("scarb", None, "fetch") == ["scarb", "fetch"]
+    reg = {"name": "glam", "version": "0.4.1", "features": [], "default_features": True}
+    reg_f = {"name": "fixed", "version": "^0.4.0", "features": ["x"], "default_features": False}
+    loc = {"name": "dep", "root": "/w/dep", "features": [], "default_features": False}
+    m = consumer_manifest([reg, reg_f, loc], "2024_07", None)
+    assert 'glam = "0.4.1"' in m, m
+    assert 'fixed = { version = "^0.4.0", default-features = false, features = ["x"] }' in m, m
+    assert 'dep = { path = "/w/dep", default-features = false }' in m, m
+    assert "[dependencies]" not in consumer_manifest([], None, None).split("[package]")[0]
+    meta = {"name": "c", "dependencies": [
+        {"name": "core", "kind": None, "source": "registry+x", "version_req": "=1"},
+        {"name": "starknet", "kind": None, "source": "registry+x", "version_req": "=1"},
+        {"name": "t", "kind": "dev", "source": "registry+x", "version_req": "^1"},
+        {"name": "b", "kind": None, "source": "registry+x", "version_req": "^0.4.0"},
+        {"name": "a", "kind": None, "source": "path+file:///w/a/Scarb.toml", "version_req": "^0.1.0",
+         "default_features": False, "features": ["f"]}]}
+    deps = direct_dependencies(meta)
+    assert [d["name"] for d in deps] == ["a", "b"], deps
+    assert deps[0] == {"name": "a", "features": ["f"], "default_features": False, "root": "/w/a"}
+    assert deps[1]["version"] == "^0.4.0" and deps[1]["default_features"], deps
+    g = dict(DEFAULT_GATES)
+    row = {"gated_lines": 10, "added_seconds": 20.0, "added_gb": 0.5, "marginal_seconds": 2.0,
+           "marginal_gb": 0.2}
+    assert judge(row, g, False) == []  # over-baseline is 20 s but the marginal cost is what counts
+    assert judge(dict(row, marginal_seconds=6.0), g, False) == ["marginal time > 5 s"]
+    assert judge(dict(row, gated_lines=40_001), g, False) == ["lines > 40,000"]
+    assert judge(dict(row, gated_lines=10**6, marginal_seconds=99.0), g, True) == ["closure time > 15 s"]
+    assert judge({"closure": True, "added_seconds": 1.0, "added_gb": 3.5}, g, False) == [
+        "memory > 3 GB"]
+    print("self-test: ok")
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description="Consumer cost and size gates of published crates.")
     ap.add_argument("--manifest-path", help="workspace manifest (default: from the current directory)")
     ap.add_argument("--package", action="append", default=[], metavar="NAME",
                     help="crate to check (repeatable); default: the published packages")
-    ap.add_argument("--closure", action="append", default=[], metavar="NAME=a,b",
-                    help="consumer of several crates against the closure budget (repeatable)")
+    ap.add_argument("--facade", action="append", default=[], metavar="NAME",
+                    help="crate judged on the closure budget only (repeatable)")
+    ap.add_argument("--closure", action="append", default=[], metavar="NAME=a,b@1.2",
+                    help="consumer of several crates (workspace `name` or registry `name@version`) "
+                         "against the closure budget (repeatable)")
     ap.add_argument("--features", help="comma-separated features to enable on every measured crate")
     ap.add_argument("--no-default-features", action="store_true")
     ap.add_argument("--repeat", type=int, default=1, help="builds per consumer, the median is kept")
     ap.add_argument("--lines-only", action="store_true", help="count lines only (no build)")
+    ap.add_argument("--dry-run", action="store_true",
+                    help="print the consumer manifests that would be built, build nothing")
+    ap.add_argument("--self-test", action="store_true", help="check the script's own logic and exit")
     ap.add_argument("--report-only", action="store_true", help="never fail on a gate")
     ap.add_argument("--modules", action="store_true", help="print the lines per top-level module")
     ap.add_argument("--json", metavar="PATH", help="write the results as JSON")
@@ -404,8 +541,10 @@ def main():
         ap.add_argument("--" + k.replace("_", "-"), type=float, default=None,
                         help=f"gate (default {v:g})")
     args = ap.parse_args()
+    if args.self_test:
+        return self_test()
 
-    root, packages = workspace_packages(args.manifest_path)
+    root, packages = workspace_packages(args.scarb, args.manifest_path)
     cfg_path = args.config or os.path.join(root, "consumer_cost.toml")
     cfg = read_toml(cfg_path) if os.path.exists(cfg_path) and tomllib else {}
     if args.config and not cfg:
@@ -419,14 +558,20 @@ def main():
     for n in names:
         if n not in by_name:
             sys.exit(f"error: no package `{n}` in the workspace")
+    facades = set(cfg.get("facades", [])) | set(args.facade)
+    for n in facades:
+        if n not in by_name:
+            sys.exit(f"error: facade `{n}`: no package in the workspace")
     closures = {k: list(v) for k, v in cfg.get("closures", {}).items()}
     for spec in args.closure:
         name, _, members = spec.partition("=")
         closures[name] = [m for m in members.split(",") if m]
     for name, members in closures.items():
         for m in members:
-            if m not in by_name:
-                sys.exit(f"error: closure `{name}`: no package `{m}` in the workspace")
+            crate, req = parse_member(m)
+            if req is None and crate not in by_name:
+                sys.exit(f"error: closure `{name}`: no package `{crate}` in the workspace "
+                         f"(a registry crate is written `{crate}@VERSION`)")
 
     def dep(name):
         conf = cfg.get("crates", {}).get(name, {})
@@ -437,6 +582,12 @@ def main():
             "features": feats,
             "default_features": not args.no_default_features and conf.get("default_features", True),
         }
+
+    def member(spec):
+        crate, req = parse_member(spec)
+        if req is None:
+            return dep(crate)
+        return {"name": crate, "version": req, "features": [], "default_features": True}
 
     metric = args.lines_metric
     line_counts = {}
@@ -456,65 +607,86 @@ def main():
         for m in c["missing"]:
             print(f"warning: module file not found: {m}", file=sys.stderr)
         results.append({"crate": n, "version": p["version"], "features": p["features"],
+                        "facade": n in facades,
+                        "direct_deps": [d["name"] for d in p["deps"]],
                         "lines": c["raw"], "lines_nonblank": c["nonblank"],
                         "test_lines_excluded": c["test_excluded"], "files": c["files"],
                         "modules": c["modules"],
                         "gated_lines": c["raw"] if metric == "raw" else c["nonblank"]})
 
     baseline = None
+    measured = {}  # consumer manifest -> (seconds, rss bytes, samples), a manifest is built once
+    planned = {}  # dry run: consumer manifest -> labels
+
+    def cost(label, deps, edition, lib_table):
+        text = consumer_manifest(deps, edition, lib_table)
+        if args.dry_run:
+            planned.setdefault(text, []).append(label)
+            return 0.0, 0, {}
+        if text not in measured:
+            print(f"consumer {label}:", file=sys.stderr)
+            measured[text] = measure(label, text, args.repeat, args.scarb)
+        else:
+            print(f"consumer {label}: same manifest as an earlier one, reused", file=sys.stderr)
+        return measured[text]
+
     if not args.lines_only:
-        lib_tables = [by_name[n]["lib_table"] for n in names]
-        lib0 = lib_tables[0] if lib_tables else None
-        edition = by_name[names[0]]["edition"] if names else None
-        print("baseline consumer (no dependency):", file=sys.stderr)
-        bs, br, bsamples = measure("baseline", consumer_manifest([], edition, lib0), args.repeat,
-                                   args.scarb)
+        lib0 = by_name[names[0]]["lib_table"] if names else None
+        edition0 = by_name[names[0]]["edition"] if names else None
+        bs, br, bsamples = cost("baseline (no dependency)", [], edition0, lib0)
         baseline = {"seconds": bs, "rss_bytes": br, **bsamples}
         for r in results:
             p = by_name[r["crate"]]
-            print(f"consumer of {r['crate']}:", file=sys.stderr)
-            s, rss, samples = measure(r["crate"], consumer_manifest([dep(r["crate"])], p["edition"],
-                                      p["lib_table"]), args.repeat, args.scarb)
-            r.update(added_seconds=s - bs, added_gb=max(rss - br, 0) / GB, samples=samples)
+            s, rss, samples = cost(r["crate"], [dep(r["crate"])], p["edition"], p["lib_table"])
+            ds, drss, dsamples = cost(f"{r['crate']} direct deps ({', '.join(r['direct_deps']) or 'none'})",
+                                      p["deps"], p["edition"], p["lib_table"])
+            if args.dry_run:
+                continue
+            r.update(added_seconds=s - bs, added_gb=max(rss - br, 0) / GB, samples=samples,
+                     marginal_seconds=s - ds, marginal_gb=max(rss - drss, 0) / GB,
+                     deps_samples=dsamples)
         for cname, members in closures.items():
-            print(f"closure {cname}:", file=sys.stderr)
-            first = by_name[members[0]]
-            s, rss, samples = measure(cname, consumer_manifest([dep(m) for m in members],
-                                      first["edition"], first["lib_table"]), args.repeat, args.scarb)
-            results.append({"crate": f"closure:{cname}", "version": "-", "members": members,
-                            "lines": sum(lines_of(m)["raw"] for m in members if lines_of(m)),
-                            "added_seconds": s - bs, "added_gb": max(rss - br, 0) / GB,
-                            "samples": samples, "closure": True})
+            workspace = [by_name[parse_member(m)[0]] for m in members if parse_member(m)[1] is None]
+            first = workspace[0] if workspace else (by_name[names[0]] if names else None)
+            s, rss, samples = cost(f"closure {cname}", [member(m) for m in members],
+                                   first["edition"] if first else None,
+                                   first["lib_table"] if first else None)
+            row = {"crate": f"closure:{cname}", "version": "-", "members": members,
+                   "lines": sum(lines_of(p["name"])["raw"] for p in workspace if lines_of(p["name"])),
+                   "closure": True}
+            if not args.dry_run:
+                row.update(added_seconds=s - bs, added_gb=max(rss - br, 0) / GB, samples=samples)
+            results.append(row)
+
+    if args.dry_run and planned:
+        print(f"# Consumer manifests that would be built ({len(planned)}, cold `scarb build` each)")
+        for text, labels in planned.items():
+            print(f"\n## {'; '.join(labels)}\n```toml\n{text}```")
+        print()
 
     failed = False
     for r in results:
-        fails = []
-        if r.get("closure"):
-            if r["added_seconds"] > gates["closure_seconds"]:
-                fails.append(f"time > {gates['closure_seconds']:g} s")
-            if r["added_gb"] > gates["closure_gb"]:
-                fails.append(f"memory > {gates['closure_gb']:g} GB")
-        else:
-            if r["gated_lines"] > gates["max_lines"]:
-                fails.append(f"lines > {gates['max_lines']:,.0f}")
-            if "added_seconds" in r:
-                if r["added_seconds"] > gates["max_seconds"]:
-                    fails.append(f"time > {gates['max_seconds']:g} s")
-                if r["added_gb"] > gates["max_gb"]:
-                    fails.append(f"memory > {gates['max_gb']:g} GB")
+        fails = judge(r, gates, r.get("facade", False))
         r["verdict"] = verdict(fails)
         failed |= bool(fails)
 
-    table = ["| crate | version | lines | added s | added GB | verdict |", "|---|---|---:|---:|---:|---|"]
+    def fmt(r, key, spec):
+        return format(r[key], spec) if key in r and not args.dry_run else "-"
+
+    table = ["| crate | version | lines | over baseline s | over baseline GB | marginal s "
+             "| marginal GB | verdict |", "|---|---|---:|---:|---:|---:|---:|---|"]
     for r in results:
-        s = f"{r['added_seconds']:.1f}" if "added_seconds" in r else "-"
-        g = f"{r['added_gb']:.2f}" if "added_gb" in r else "-"
-        table.append(f"| {r['crate']} | {r['version']} | {r['lines']:,} | {s} | {g} | {r['verdict']} |")
+        name = r["crate"] + (" (facade)" if r.get("facade") else "")
+        table.append(f"| {name} | {r['version']} | {r['lines']:,} | {fmt(r, 'added_seconds', '.1f')} "
+                     f"| {fmt(r, 'added_gb', '.2f')} | {fmt(r, 'marginal_seconds', '.1f')} "
+                     f"| {fmt(r, 'marginal_gb', '.2f')} | {r['verdict']} |")
     print("\n".join(table))
     print(f"\nLines: physical lines of the library files, test-only code excluded "
-          f"(gate: {metric}, max {gates['max_lines']:,.0f}); added cost = consumer - baseline "
-          f"(gates: {gates['max_seconds']:g} s / {gates['max_gb']:g} GB, closures "
-          f"{gates['closure_seconds']:g} s / {gates['closure_gb']:g} GB).")
+          f"(gate: {metric}, max {gates['max_lines']:,.0f}). Over baseline = consumer of the crate - "
+          f"baseline consumer (no dependency). Marginal = consumer of the crate - consumer of its "
+          f"direct dependencies (gate 2: {gates['max_seconds']:g} s / {gates['max_gb']:g} GB). "
+          f"Closures and facades (gate 3): over baseline, {gates['closure_seconds']:g} s / "
+          f"{gates['closure_gb']:g} GB.")
     if args.modules:
         for r in results:
             if "modules" in r:
