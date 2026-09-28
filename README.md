@@ -11,11 +11,19 @@ The `glamx` package provides `Rot2`, `Rot3`, `Pose2`, `Pose3`, `SdpMatrix2`, `Sd
 
 ```toml
 [dependencies]
-glamx = "0.3.0"
+glamx = "0.4.1"
 ```
 
-The package is compatible with Cairo 2.19.4. Its `fixed` and `glam` dependencies are pinned in
-`Scarb.lock` and resolved from the Scarb registry.
+The package is compatible with Cairo 2.19.4. It depends on
+[`glam_core`](https://github.com/bal7hazar/glam-cairo) (the vector, matrix and quaternion core of
+`glam`, not the `glam` facade) and `fixed`, both resolved from the Scarb registry and pinned in
+`Scarb.lock`.
+
+`glamx` values interoperate with `glam` facade users: the facade re-exports the `glam_core`
+modules, so `glam::vec3::Vec3`, `glam::quat::Quat` or `glam::mat4::Mat4` are the very types
+`glamx` takes and returns, with no conversion and no extra dependency on `glam_core`. The
+unpublished [`facade_check`](packages/facade_check) fixture proves it: it builds its values
+through the `glam` facade and its tests compile and pass against `glamx`.
 
 ## Gas
 

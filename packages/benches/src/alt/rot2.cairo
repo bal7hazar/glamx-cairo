@@ -3,7 +3,7 @@
 
 use fixed::fixed::Fixed;
 use fixed::wide::{WideAdd, WideNarrow, wide_mul};
-use glam::vec2::Vec2;
+use glam_core::vec2::Vec2;
 use glamx::rot2::Rot2;
 
 /// Literal complex multiplication with four separately rescaled products: 9,320 gas versus

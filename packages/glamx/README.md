@@ -7,10 +7,12 @@ Pure Cairo port of Dimforge's [glamx](https://github.com/dimforge/glamx) 0.3.1 o
 
 ```toml
 [dependencies]
-glamx = "0.3.0"
+glamx = "0.4.1"
 ```
 
-Compatible with Cairo 2.19.4.
+Compatible with Cairo 2.19.4. It depends on `glam_core` and `fixed` (not on the `glam` facade).
+`glamx` values interoperate with `glam` facade users: `glam::vec3::Vec3`, `glam::quat::Quat`,
+`glam::mat4::Mat4` and the other facade types are the `glam_core` types `glamx` takes and returns.
 
 ## Gas
 

@@ -3,7 +3,7 @@
 #[starknet::contract]
 pub mod Rigid3d {
     use fixed::Fixed;
-    use glam::{Mat3, Quat, Vec3};
+    use glam_core::{Mat3, Quat, Vec3};
     use glamx::Pose3;
     use starknet::storage::{Map, StorageMapReadAccess, StorageMapWriteAccess};
     use crate::sim::{self, Body};

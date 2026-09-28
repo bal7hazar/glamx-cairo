@@ -35,6 +35,8 @@ jobs:
       - run: scarb build -p glamx
       - name: Test
         run: snforge test -p glamx --fuzzer-runs 32 --fuzzer-seed 1
+      - name: Type identity with the glam facade
+        run: snforge test -p facade_check
 
   bench:
     name: Build, benches, gas snapshots

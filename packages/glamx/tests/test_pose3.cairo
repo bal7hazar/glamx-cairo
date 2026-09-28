@@ -7,9 +7,9 @@
 //! `tools/refgen` with `DPose3` as the oracle).
 
 use fixed::fixed::{Fixed, FixedTrait};
-use glam::mat4::{Mat4, Mat4Trait};
-use glam::quat::{Quat, QuatTrait, quat};
-use glam::vec3::{Vec3, Vec3Trait, vec3};
+use glam_core::mat4::{Mat4, Mat4Trait};
+use glam_core::quat::{Quat, QuatTrait, quat};
+use glam_core::vec3::{Vec3, Vec3Trait, vec3};
 use glamx::pose3::{Pose3, Pose3Trait, Rot3Pose3Trait};
 use glamx::rot3::Rot3;
 
@@ -58,7 +58,8 @@ fn drift(q: Quat) -> i64 {
     }
 }
 
-// The composed glamx expressions (the `benches::alt::pose3` forms), built on `glam::quat` only.
+// The composed glamx expressions (the `benches::alt::pose3` forms), built on `glam_core::quat`
+// only.
 
 fn composed_transform_point(p: Pose3, v: Vec3) -> Vec3 {
     p.rotation.mul_vec3(v) + p.translation

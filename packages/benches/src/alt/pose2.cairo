@@ -2,7 +2,7 @@
 //! `gas/pose2.snap`). The library ships fused formulations; these literal composed forms keep
 //! the comparisons reproducible across compiler upgrades.
 
-use glam::vec2::Vec2;
+use glam_core::vec2::Vec2;
 use glamx::pose2::Pose2;
 use glamx::rot2::Rot2Trait;
 

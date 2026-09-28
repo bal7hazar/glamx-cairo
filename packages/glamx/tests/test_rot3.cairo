@@ -1,13 +1,13 @@
-//! Tests of `glamx::rot3`: `Rot3` is a type alias of `glam::quat::Quat`, so the checks below
+//! Tests of `glamx::rot3`: `Rot3` is a type alias of `glam_core::quat::Quat`, so the checks below
 //! only confirm that the `Quat` API (trait methods, operator impls, conversions, `Default`,
 //! derives) resolves through the alias. The rotation arithmetic itself is tested by `glam`.
 
 use core::hash::{HashStateExTrait, HashStateTrait};
 use core::poseidon::PoseidonTrait;
 use fixed::fixed::{Fixed, FixedTrait};
-use glam::quat::{Quat, QuatTrait, quat};
-use glam::vec3::{Vec3, vec3};
-use glam::vec4::{Vec4, vec4};
+use glam_core::quat::{Quat, QuatTrait, quat};
+use glam_core::vec3::{Vec3, vec3};
+use glam_core::vec4::{Vec4, vec4};
 use glamx::rot3::Rot3;
 
 const ONE: i64 = 0x100000000;

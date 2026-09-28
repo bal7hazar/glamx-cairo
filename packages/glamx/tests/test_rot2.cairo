@@ -3,8 +3,8 @@
 
 use core::ops::MulAssign;
 use fixed::fixed::{Fixed, FixedTrait};
-use glam::mat2::Mat2;
-use glam::vec2::{Vec2, Vec2Trait};
+use glam_core::mat2::Mat2;
+use glam_core::vec2::{Vec2, Vec2Trait};
 use glamx::rot2::{Rot2, Rot2Trait};
 
 const ONE_RAW: i64 = 0x100000000;

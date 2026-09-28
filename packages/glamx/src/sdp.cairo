@@ -22,11 +22,11 @@ use fixed::fixed::Fixed;
 use fixed::wide::{
     RecipTrait, W2, WideAdd, WideMul, WideNarrow, WideSub, dot2, dot3, mul_sub, wide_mul,
 };
-use glam::mat2::Mat2;
-use glam::mat3::{Mat3, Mat3Trait};
-use glam::quat::Quat;
-use glam::vec2::Vec2;
-use glam::vec3::Vec3;
+use glam_core::mat2::Mat2;
+use glam_core::mat3::{Mat3, Mat3Trait};
+use glam_core::quat::Quat;
+use glam_core::vec2::Vec2;
+use glam_core::vec3::Vec3;
 
 /// A 2x2 symmetric matrix, stored as its 3 unique entries (row, column indices from 1).
 ///

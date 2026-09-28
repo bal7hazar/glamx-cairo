@@ -6,8 +6,8 @@
 use benches::alt::rot2 as alt;
 use benches::harness::{bb, sink};
 use fixed::fixed::Fixed;
-use glam::mat2::Mat2;
-use glam::vec2::Vec2;
+use glam_core::mat2::Mat2;
+use glam_core::vec2::Vec2;
 use glamx::rot2::{Rot2, Rot2Trait};
 
 /// `new(0.5)`.

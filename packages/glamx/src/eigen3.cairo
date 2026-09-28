@@ -83,8 +83,8 @@ use fixed::wide::{
     RecipTrait, W1, WideAdd, WideMul, WideNarrow, WideSqrt, WideSub, dot3, norm2, wide_from,
     wide_mul,
 };
-use glam::mat3::{Mat3, Mat3Trait};
-use glam::vec3::{Vec3, Vec3Trait};
+use glam_core::mat3::{Mat3, Mat3Trait};
+use glam_core::vec3::{Vec3, Vec3Trait};
 use crate::sdp::SdpMatrix3;
 
 /// The eigen-decomposition of a symmetric 3x3 matrix: `A = V diag(eigenvalues) V^T`.

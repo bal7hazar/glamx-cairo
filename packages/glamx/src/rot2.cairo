@@ -11,8 +11,8 @@ use core::ops::MulAssign;
 use fixed::fixed::{Fixed, FixedTrait};
 use fixed::trig::TrigTrait;
 use fixed::wide::{dot2, is_unit2, mul_sub, norm2, norm2_squared, normalize2};
-use glam::mat2::Mat2;
-use glam::vec2::Vec2;
+use glam_core::mat2::Mat2;
+use glam_core::vec2::Vec2;
 
 /// A 2D rotation represented as the unit complex number `re + im * i`, where `re` is the cosine
 /// and `im` the sine of its angle.

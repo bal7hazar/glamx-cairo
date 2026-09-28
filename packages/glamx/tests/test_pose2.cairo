@@ -4,8 +4,8 @@
 //! The f64 glamx oracle is checked separately by generated `golden_pose2.cairo`.
 
 use fixed::fixed::{Fixed, FixedTrait};
-use glam::mat3::Mat3Trait;
-use glam::vec2::{Vec2, Vec2Trait, vec2};
+use glam_core::mat3::Mat3Trait;
+use glam_core::vec2::{Vec2, Vec2Trait, vec2};
 use glamx::pose2::{Pose2, Pose2Trait, Rot2Pose2Trait};
 use glamx::rot2::{Rot2, Rot2Trait};
 
@@ -224,9 +224,9 @@ fn test_to_from_mat3() {
     assert_eq!(
         m,
         Mat3Trait::from_cols(
-            glam::vec3::Vec3 { x: f(0), y: f(ONE), z: f(0) },
-            glam::vec3::Vec3 { x: f(-ONE), y: f(0), z: f(0) },
-            glam::vec3::Vec3 { x: n(1), y: n(2), z: f(ONE) },
+            glam_core::vec3::Vec3 { x: f(0), y: f(ONE), z: f(0) },
+            glam_core::vec3::Vec3 { x: f(-ONE), y: f(0), z: f(0) },
+            glam_core::vec3::Vec3 { x: n(1), y: n(2), z: f(ONE) },
         ),
     );
     assert_eq!(Pose2Trait::from_mat3(m), p);

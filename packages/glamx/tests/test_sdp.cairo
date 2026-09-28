@@ -7,11 +7,11 @@
 
 use fixed::fixed::{FRAC_1_SQRT_2, Fixed, FixedTrait};
 use fixed::wide::mul_sub;
-use glam::mat2::{Mat2, Mat2Trait};
-use glam::mat3::{Mat3, Mat3Trait};
-use glam::quat::{Quat, QuatTrait};
-use glam::vec2::Vec2;
-use glam::vec3::{Vec3, Vec3Trait};
+use glam_core::mat2::{Mat2, Mat2Trait};
+use glam_core::mat3::{Mat3, Mat3Trait};
+use glam_core::quat::{Quat, QuatTrait};
+use glam_core::vec2::Vec2;
+use glam_core::vec3::{Vec3, Vec3Trait};
 use glamx::sdp::{SdpMatrix2, SdpMatrix2Trait, SdpMatrix3, SdpMatrix3Trait};
 
 const ONE: i64 = 0x100000000;
