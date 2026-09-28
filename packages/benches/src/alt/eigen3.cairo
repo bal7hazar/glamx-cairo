@@ -33,8 +33,8 @@ use fixed::wide::{
     RecipTrait, W1, WideAdd, WideMul, WideNarrow, WideSqrt, WideSub, dot3, mul_add, mul_sub, norm2,
     norm3, normalize2, wide_from, wide_mul,
 };
-use glam::mat3::{Mat3, Mat3Trait};
-use glam::vec3::{Vec3, Vec3Trait};
+use glam_core::mat3::{Mat3, Mat3Trait};
+use glam_core::vec3::{Vec3, Vec3Trait};
 use glamx::eigen3::SymmetricEigen3;
 
 const THREE: Fixed = Fixed { raw: 0x300000000 };

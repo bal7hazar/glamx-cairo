@@ -4,8 +4,8 @@
 // Regenerate: cargo run --manifest-path tools/refgen/Cargo.toml -- gen rot2
 
 use fixed::Fixed;
-use glam::mat2::Mat2;
-use glam::vec2::vec2;
+use glam_core::mat2::Mat2;
+use glam_core::vec2::vec2;
 use glamx::rot2::{Rot2, Rot2Trait};
 
 fn next_i64(ref d: Span<i64>) -> i64 {

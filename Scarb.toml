@@ -2,7 +2,7 @@
 members = ["packages/*"]
 
 [workspace.package]
-version = "0.4.0"
+version = "0.4.1"
 edition = "2024_07"
 cairo-version = "2.19.4"
 license = "MIT"
@@ -10,8 +10,9 @@ repository = "https://github.com/bal7hazar/glamx-cairo"
 
 [workspace.dependencies]
 fixed = "0.4.0"
-glam = "0.4.0"
-glamx = { path = "packages/glamx", version = "0.4.0" }
+glam = "0.4.1"
+glam_core = "0.4.1"
+glamx = { path = "packages/glamx", version = "0.4.1" }
 snforge_std = "0.61.0"
 assert_macros = "2.19.4"
 

@@ -1,16 +1,18 @@
 [package]
-name = "glamx"
-description = "Physics-oriented extensions of glam (Rot2, Pose2, Pose3, SdpMatrix, symmetric eigen): port of Dimforge glamx on the fixed Q32.32 scalar"
+name = "facade_check"
+description = "Type-identity fixture: values built through the registry glam facade are the values glamx takes and returns (not published)"
 version.workspace = true
 edition.workspace = true
 cairo-version.workspace = true
 license.workspace = true
 repository.workspace = true
 readme = "README.md"
+publish = false
 
 [dependencies]
 fixed.workspace = true
-glam_core.workspace = true
+glam.workspace = true
+glamx.workspace = true
 
 [dev-dependencies]
 snforge_std.workspace = true

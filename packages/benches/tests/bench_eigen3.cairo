@@ -11,8 +11,8 @@
 use benches::alt::eigen3 as alt;
 use benches::harness::{bb, sink};
 use fixed::fixed::Fixed;
-use glam::mat3::Mat3;
-use glam::vec3::Vec3;
+use glam_core::mat3::Mat3;
+use glam_core::vec3::Vec3;
 use glamx::eigen3::{Mat3ExtTrait, SymmetricEigen3, SymmetricEigen3Trait};
 use glamx::sdp::SdpMatrix3;
 

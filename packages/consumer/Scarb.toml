@@ -11,7 +11,7 @@ publish = false
 
 [dependencies]
 fixed.workspace = true
-glam.workspace = true
+glam_core.workspace = true
 glamx.workspace = true
 starknet = "2.19.4"
 

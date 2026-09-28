@@ -4,9 +4,9 @@
 use benches::alt::pose2 as alt;
 use benches::harness::{bb, sink};
 use fixed::fixed::Fixed;
-use glam::mat3::Mat3;
-use glam::vec2::Vec2;
-use glam::vec3::Vec3;
+use glam_core::mat3::Mat3;
+use glam_core::vec2::Vec2;
+use glam_core::vec3::Vec3;
 use glamx::pose2::{Pose2, Pose2Trait, Rot2Pose2Trait};
 use glamx::rot2::Rot2;
 

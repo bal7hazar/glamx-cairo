@@ -4,11 +4,11 @@
 // Regenerate: cargo run --manifest-path tools/refgen/Cargo.toml -- gen sdp
 
 use fixed::Fixed;
-use glam::mat2::Mat2;
-use glam::mat3::Mat3;
-use glam::quat::Quat;
-use glam::vec2::Vec2;
-use glam::vec3::Vec3;
+use glam_core::mat2::Mat2;
+use glam_core::mat3::Mat3;
+use glam_core::quat::Quat;
+use glam_core::vec2::Vec2;
+use glam_core::vec3::Vec3;
 use glamx::sdp::{SdpMatrix2Trait as S2, SdpMatrix3Trait as S3};
 
 fn next_i64(ref d: Span<i64>) -> i64 {

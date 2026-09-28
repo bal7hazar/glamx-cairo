@@ -35,10 +35,10 @@ pub enum Ty {
     /// `glamx::Rot2` (`re`, `im`). A spec sets its non-glam import path.
     Rot2,
     /// `glamx::Pose2` (`rotation: Rot2`, `translation: Vec2`). No default import path under
-    /// `glam::`: a spec sets it with `[types.Pose2] path = "glamx::pose2::Pose2"`.
+    /// `glam_core::`: a spec sets it with `[types.Pose2] path = "glamx::pose2::Pose2"`.
     Pose2,
     /// `glamx::Pose3` (`rotation: Quat`, `translation: Vec3`). No default import path under
-    /// `glam::`: a spec sets it with `[types.Pose3] path = "glamx::pose3::Pose3"`.
+    /// `glam_core::`: a spec sets it with `[types.Pose3] path = "glamx::pose3::Pose3"`.
     Pose3,
     BVec2,
     BVec3,
@@ -62,7 +62,7 @@ pub struct Layout {
 #[derive(Clone, Debug, Default, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct LayoutOverride {
-    /// Import path, e.g. `glam::mat3::Mat3`.
+    /// Import path, e.g. `glam_core::mat3::Mat3`.
     pub path: Option<String>,
     /// Emitted Cairo type name when it differs from the generator slot, e.g. `Rot2` for the
     /// two-Fixed `Vec2` layout.
@@ -189,7 +189,7 @@ impl Ty {
             Ty::I64 | Ty::I32 | Ty::U32 | Ty::Bool | Ty::Tuple(_) => None,
             other => {
                 let name = other.cairo();
-                Some(format!("glam::{}::{}", name.to_lowercase(), name))
+                Some(format!("glam_core::{}::{}", name.to_lowercase(), name))
             }
         }
     }

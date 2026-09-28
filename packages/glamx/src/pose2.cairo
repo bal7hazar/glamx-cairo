@@ -9,10 +9,10 @@
 use core::ops::MulAssign;
 use fixed::fixed::{Fixed, FixedTrait};
 use fixed::wide::{WideAdd, WideNarrow, WideNeg, WideSub, dot2, mul_sub, wide_from, wide_mul};
-use glam::mat2::Mat2;
-use glam::mat3::{Mat3, Mat3Trait};
-use glam::vec2::{Vec2, Vec2Trait};
-use glam::vec3::Vec3;
+use glam_core::mat2::Mat2;
+use glam_core::mat3::{Mat3, Mat3Trait};
+use glam_core::vec2::{Vec2, Vec2Trait};
+use glam_core::vec3::Vec3;
 use crate::rot2::{Rot2, Rot2Trait};
 
 /// A 2D pose (rotation + translation), representing a rigid-body transformation: a point `p` is

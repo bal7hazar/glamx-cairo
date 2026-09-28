@@ -7,6 +7,23 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning pol
 
 Nothing yet.
 
+## [0.4.1] - 2026-09-28
+
+No API change and no numeric change: every gas snapshot and golden file is identical to 0.4.0.
+
+### Changed
+
+- Depends on `glam_core` (0.4.1) instead of the `glam` facade (closure -0.45 s / -0.25 GB); no
+  API change. `glamx` values interoperate with `glam` facade users: the facade re-exports the
+  `glam_core` modules, so `glam::vec3::Vec3`, `glam::quat::Quat`, `glam::mat4::Mat4` and the other
+  facade types are the types `glamx` takes and returns.
+
+### Added
+
+- `packages/facade_check` (unpublished): a fixture that depends on the registry `glam` 0.4.1 and
+  on `glamx`, builds its values through the facade paths and passes them to `glamx`; its `snforge`
+  tests are the proof of the type identity.
+
 ## [0.4.0] - 2026-09-25
 
 First release of `glamx` cut from `glamx-cairo`: depends on the published `fixed` 0.4.0 (adds the

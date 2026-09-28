@@ -16,10 +16,10 @@
 use core::ops::MulAssign;
 use fixed::fixed::Fixed;
 use fixed::wide::{WideAdd, WideLift, WideMul, WideNarrow, WideSub, wide_from, wide_mul};
-use glam::mat4::{Mat4, Mat4Trait};
-use glam::quat::{Quat, QuatTrait};
-use glam::vec3::{Vec3, Vec3Trait};
-use glam::vec4::Vec4Trait;
+use glam_core::mat4::{Mat4, Mat4Trait};
+use glam_core::quat::{Quat, QuatTrait};
+use glam_core::vec3::{Vec3, Vec3Trait};
+use glam_core::vec4::Vec4Trait;
 use crate::rot3::Rot3;
 
 /// A 3D pose (rotation + translation), representing a rigid-body transformation: a point `p` is
@@ -31,7 +31,7 @@ use crate::rot3::Rot3;
 /// drift. Measured by `test_composition_drift` on a chain `p = p * step`: 58 ULP after 100
 /// compositions, 278 after 400, 697 after 1 000 (about 0.7 ULP per composition); a chain of
 /// `inv_mul`, whose conjugated terms floor in both directions, stays within 36 ULP over 1 000
-/// steps. `glam::quat` measures up to 2.5 ULP per product on random chains (271 ULP after 100,
+/// steps. `glam_core::quat` measures up to 2.5 ULP per product on random chains (271 ULP after 100,
 /// 2 400 after 1 000). A rotation therefore leaves the `QuatTrait::is_normalized` band
 /// (1 024 ULP) after 400 to 1 400 compositions: renormalizing the rotation of a body every few
 /// hundred steps (`pose.rotation = pose.rotation.normalize()`, 4 ULP from unit afterwards) is
@@ -355,7 +355,8 @@ pub trait Pose3Trait {
     /// * Never: built on `Fixed::abs_diff_eq`, an `i128` difference that never panics (R1
     ///   panic-coverage audit, escalation 1).
     /// #### Deviations
-    /// * An inherent method with an explicit tolerance, as `glam::quat::QuatTrait::abs_diff_eq`
+    /// * An inherent method with an explicit tolerance, as
+    /// `glam_core::quat::QuatTrait::abs_diff_eq`
     ///   (there is no `approx` crate and no default epsilon).
     fn abs_diff_eq(self: Pose3, rhs: Pose3, max_abs_diff: Fixed) -> bool;
 }

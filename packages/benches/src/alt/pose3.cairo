@@ -1,11 +1,11 @@
 //! Alternative implementations benchmarked against `glamx::pose3` (the `alt_*` rows of
 //! `gas/pose3.snap`). The library ships the fused formulations it documents; the composed forms
-//! below are the literal glamx expressions on top of the public `glam::quat` API. They give
+//! below are the literal glamx expressions on top of the public `glam_core::quat` API. They give
 //! bit-identical results (the exact value inside each kernel is the same) and stay here so that
 //! the comparison is reproducible across compiler upgrades.
 
-use glam::quat::QuatTrait;
-use glam::vec3::Vec3;
+use glam_core::quat::QuatTrait;
+use glam_core::vec3::Vec3;
 use glamx::pose3::Pose3;
 
 /// Alternative to `Pose3Trait::transform_point`: `rotation.mul_vec3(p) + translation`, a rescale

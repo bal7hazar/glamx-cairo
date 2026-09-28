@@ -159,7 +159,7 @@ ITEMS = [
 
 PROBE_PRELUDE = """\
     use fixed::Fixed;
-    use glam::{Mat3, Quat, Vec3};
+    use glam_core::{Mat3, Quat, Vec3};
     use glamx::{
         Pose2, Pose2Trait, Pose3, Pose3Trait, Rot2, Rot2Trait, SdpMatrix3, SdpMatrix3Trait,
         SymmetricEigen3, SymmetricEigen3Trait,
@@ -190,8 +190,8 @@ def temp_package(work, strategy, items):
     src = work / "src"
     shutil.copytree(ROOT / "packages" / PACKAGE / "src", src)
     deps = (
-        'fixed = "0.3.0"\n'
-        'glam = "0.3.0"\n'
+        'fixed = "0.4.0"\n'
+        'glam_core = "0.4.1"\n'
         f'glamx = {{ path = "{(ROOT / "packages" / "glamx").as_posix()}" }}'
     )
     (work / "Scarb.toml").write_text(

@@ -3,21 +3,31 @@ version = 1
 
 [[package]]
 name = "benches"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "fixed",
- "glam",
+ "glam_core",
  "glamx",
  "snforge_std",
 ]
 
 [[package]]
 name = "consumer"
-version = "0.4.0"
+version = "0.4.1"
+dependencies = [
+ "fixed",
+ "glam_core",
+ "glamx",
+]
+
+[[package]]
+name = "facade_check"
+version = "0.4.1"
 dependencies = [
  "fixed",
  "glam",
  "glamx",
+ "snforge_std",
 ]
 
 [[package]]
@@ -28,19 +38,62 @@ checksum = "sha256:a8f7ec541b8cc85894688ae9008cddb87cccc55a024b04b35f7fd3716d715
 
 [[package]]
 name = "glam"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://scarbs.xyz/"
-checksum = "sha256:d3b4327f57b012dfa848e948ca7faee8dd10f475eaaa62e8456dcb640c4835fc"
+checksum = "sha256:e835d496f197342a97a214662aee29920c306ee6238f7404b1261f26d42a4f4e"
+dependencies = [
+ "fixed",
+ "glam_core",
+ "glam_int",
+ "glam_int_swizzles",
+ "glam_swizzles",
+]
+
+[[package]]
+name = "glam_core"
+version = "0.4.1"
+source = "registry+https://scarbs.xyz/"
+checksum = "sha256:86351a73e26bfd6bbdd7548775e9377b33ed08a9616a249117942ccb29b7c75f"
 dependencies = [
  "fixed",
 ]
 
 [[package]]
-name = "glamx"
-version = "0.4.0"
+name = "glam_int"
+version = "0.4.1"
+source = "registry+https://scarbs.xyz/"
+checksum = "sha256:64fd9c5e3003283a1bbc3231a20181fb15cce7362e52cec539953a9461652380"
 dependencies = [
  "fixed",
- "glam",
+ "glam_core",
+]
+
+[[package]]
+name = "glam_int_swizzles"
+version = "0.4.1"
+source = "registry+https://scarbs.xyz/"
+checksum = "sha256:6e1f8a8133c467f1b08efd0883f74d616a83d3525326b3699f8c5a61bddfe6b5"
+dependencies = [
+ "fixed",
+ "glam_core",
+]
+
+[[package]]
+name = "glam_swizzles"
+version = "0.4.1"
+source = "registry+https://scarbs.xyz/"
+checksum = "sha256:47c260d6c07e4d04f3a6e9599cc550790ae74851f632c600a5728e7958223133"
+dependencies = [
+ "fixed",
+ "glam_core",
+]
+
+[[package]]
+name = "glamx"
+version = "0.4.1"
+dependencies = [
+ "fixed",
+ "glam_core",
  "snforge_std",
 ]
 
