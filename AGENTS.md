@@ -16,13 +16,15 @@ Read `docs/DESIGN.md` before writing code. Cross-repository sequencing and porte
 | `packages/glamx` | `Rot2`, `Rot3`, `Pose2/3`, `SdpMatrix2/3`, `SymmetricEigen3` |
 | `packages/benches` | unpublished benchmark harness and losing glamx variants |
 | `packages/consumer` | unpublished Starknet bytecode-size fixtures using glamx |
+| `packages/facade_check` | unpublished fixture: the registry `glam` facade's types passed to glamx (type identity) |
 | `gas/*.snap` | committed gas/step snapshots, one per glamx benchmark module |
 | `tools/refgen` | glamx 0.3.1 golden-vector specs and Rust oracles |
 | `scripts/check.sh` | the full quality gate |
 | `docs/DESIGN.md` | numeric, API and implementation decisions |
 
-`fixed = "0.3.0"` and `glam = "0.3.0"` come from the Scarb registry. Their source and design
-documents live in `fixed-cairo` and `glam-cairo`.
+`fixed = "0.4.0"` and `glam_core = "0.4.1"` come from the Scarb registry (`glam = "0.4.1"` only
+for `packages/facade_check`). Their source and design documents live in `fixed-cairo` and
+`glam-cairo`.
 
 ## Commands
 

@@ -14,9 +14,12 @@ ports of Parry and Rapier:
 |---|---|
 | `glamx` | `Rot2`, `Rot3 = Quat`, `Pose2`, `Pose3`, `SdpMatrix2`, `SdpMatrix3`, `SymmetricEigen3` |
 
-The package deliberately depends on the registry releases `fixed = "0.3.0"` and
-`glam = "0.3.0"`. General vector, matrix, quaternion and scalar APIs belong to those repositories,
-not here.
+The package deliberately depends on the registry releases `fixed = "0.4.0"` and
+`glam_core = "0.4.1"` (not the `glam` facade: glamx only uses core types, and the closure of an
+empty consumer is 0.45 s / 0.25 GB lighter, 0.4.1). The `glam` facade re-exports `glam_core`'s
+modules, so `glam::vec3::Vec3` and the other facade types are the types glamx takes and returns;
+`packages/facade_check` proves it. General vector, matrix, quaternion and scalar APIs belong to
+those repositories, not here.
 
 ## 2. Scalar and arithmetic foundation
 
