@@ -196,7 +196,7 @@ def temp_package(work, strategy, items):
     )
     (work / "Scarb.toml").write_text(
         f'[package]\nname = "{PACKAGE}"\nversion = "0.1.0"\nedition = "2024_07"\n\n'
-        f'[dependencies]\n{deps}\nstarknet = "2.19.4"\n\n'
+        f'[dependencies]\n{deps}\nstarknet = "2.20.0"\n\n'
         "[[target.starknet-contract]]\nsierra = true\ncasm = true\n\n"
         f"[profile.release.cairo]\ninlining-strategy = {strategy}\n"
     )
