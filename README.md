@@ -35,46 +35,46 @@ Sierra gas (`l2 gas`, what a transaction pays) and prover cost (steps, range che
 
 | op | l2 gas | steps | range checks |
 |---|---:|---:|---:|
-| `mul_pose3` | 18 480 | 164 | 28 |
-| `inv_mul` | 20 700 | 182 | 34 |
-| `inverse` | 10 360 | 94 | 12 |
-| `transform_point` | 10 260 | 93 | 12 |
-| `transform_vector` | 9 360 | 84 | 12 |
-| `inverse_transform_point` | 11 580 | 102 | 18 |
-| `nlerp` | 34 910 | 284 | 59 |
-| `to_mat4` | 21 360 | 183 | 42 |
+| `mul_pose3` | 18 360 | 164 | 28 |
+| `inv_mul` | 20 580 | 182 | 34 |
+| `inverse` | 10 240 | 94 | 12 |
+| `transform_point` | 10 140 | 93 | 12 |
+| `transform_vector` | 9 240 | 84 | 12 |
+| `inverse_transform_point` | 11 460 | 102 | 18 |
+| `nlerp` | 34 790 | 284 | 59 |
+| `to_mat4` | 21 240 | 183 | 42 |
 
 ### `Pose2`
 
 | op | l2 gas | steps | range checks |
 |---|---:|---:|---:|
-| `mul` | 8 840 | 76 | 16 |
-| `inv_mul` | 9 920 | 84 | 20 |
-| `inverse` | 5 180 | 45 | 8 |
-| `transform_point` | 5 080 | 44 | 8 |
-| `transform_vector` | 4 680 | 40 | 8 |
+| `mul` | 8 720 | 76 | 16 |
+| `inv_mul` | 9 800 | 84 | 20 |
+| `inverse` | 5 060 | 45 | 8 |
+| `transform_point` | 4 960 | 44 | 8 |
+| `transform_vector` | 4 560 | 40 | 8 |
 
 ### `Rot2`
 
 | op | l2 gas | steps | range checks |
 |---|---:|---:|---:|
-| `mul` | 4 680 | 40 | 8 |
-| `mul_vec2` | 4 680 | 40 | 8 |
+| `mul` | 4 560 | 40 | 8 |
+| `mul_vec2` | 4 560 | 40 | 8 |
 | `inverse` | 400 | 4 | 0 |
 | `from_angle` | 31 300 | 243 | 62 |
 | `angle` | 29 630 | 207 | 44 |
-| `normalize` | 8 940 | 75 | 18 |
-| `lerp` | 4 880 | 42 | 8 |
+| `normalize` | 8 820 | 75 | 18 |
+| `lerp` | 4 760 | 42 | 8 |
 | `slerp` | 71 960 | 536 | 126 |
 
 ### `SdpMatrix3`
 
 | op | l2 gas | steps | range checks |
 |---|---:|---:|---:|
-| `mul_vec` | 7 160 | 62 | 12 |
-| `mul_mat` | 19 640 | 170 | 36 |
-| `add` | 5 960 | 50 | 12 |
-| `quadform` | 21 130 | 183 | 24 |
+| `mul_vec` | 7 040 | 62 | 12 |
+| `mul_mat` | 19 520 | 170 | 36 |
+| `add` | 5 840 | 50 | 12 |
+| `quadform` | 21 010 | 183 | 24 |
 | `inverse_regular` | 27 650 | 226 | 56 |
 | `from_rotated_diagonal` | 35 550 | 299 | 66 |
 
