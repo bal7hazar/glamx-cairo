@@ -8,13 +8,142 @@ on:
 permissions:
   contents: read
 
+# A new push to a pull request cancels its superseded run; every push to main gets a group of its
+# own commit (GitHub keeps one pending run per group), so each main commit keeps its full run.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # Which jobs a pull request needs, from its changed paths (never from a label). Pushes to main
+  # run every job. A change of the toolchain row, or of a path that no row of the table names,
+  # runs every job. Prose .md files trigger nothing, except the ones a script checks: README.md
+  # and packages/glamx/README.md (generated gas regions, gas_tables.py).
+  changes:
+    name: Changed paths
+    runs-on: ubuntu-latest
+    outputs:
+      fmt_lint: ${{ steps.flags.outputs.fmt_lint }}
+      test: ${{ steps.flags.outputs.test }}
+      bench: ${{ steps.flags.outputs.bench }}
+      golden: ${{ steps.flags.outputs.golden }}
+      docs: ${{ steps.flags.outputs.docs }}
+      consumer_cost: ${{ steps.flags.outputs.consumer_cost }}
+    steps:
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: some
+        if: github.event_name == 'pull_request'
+        with:
+          filters: |
+            toolchain:
+              - '.tool-versions'
+              - 'Scarb.toml'
+              - 'Scarb.lock'
+              - '.github/workflows/**'
+            scripts:
+              - 'scripts/**'
+            gas:
+              - 'gas/**'
+            checked_docs:
+              - 'README.md'
+              - 'packages/glamx/README.md'
+            bench_scripts:
+              - 'scripts/bench.py'
+              - 'scripts/bytecode_size.py'
+            golden_tests:
+              - 'packages/glamx/tests/golden_*.cairo'
+            doc_sources:
+              - 'packages/*/src/**'
+              - 'packages/*/Scarb.toml'
+            consumer:
+              - 'packages/glamx/src/**'
+              - 'packages/glamx/Scarb.toml'
+              - 'consumer_cost.toml'
+              - 'scripts/consumer_cost.py'
+              - 'scripts/packages_table.py'
+      # Filters that exclude prose .md (or select what no row names) need every pattern of a list
+      # to hold: with the default quantifier, a list of negations matches almost every path.
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: every
+        if: github.event_name == 'pull_request'
+        with:
+          predicate-quantifier: 'every'
+          filters: |
+            cairo:
+              - 'packages/**'
+              - '!**/*.md'
+            test_glamx:
+              - 'packages/glamx/**'
+              - '!**/*.md'
+            test_facade:
+              - 'packages/facade_check/**'
+              - '!**/*.md'
+            refgen:
+              - 'tools/refgen/**'
+              - '!**/*.md'
+            unknown:
+              - '**'
+              - '!packages/**'
+              - '!scripts/**'
+              - '!gas/**'
+              - '!tools/refgen/**'
+              - '!**/*.md'
+              - '!LICENSE'
+              - '!consumer_cost.toml'
+              - '!.tool-versions'
+              - '!Scarb.toml'
+              - '!Scarb.lock'
+              - '!.github/workflows/**'
+      - name: Jobs to run
+        id: flags
+        env:
+          EVENT: ${{ github.event_name }}
+          TOOLCHAIN: ${{ steps.some.outputs.toolchain }}
+          SCRIPTS: ${{ steps.some.outputs.scripts }}
+          GAS: ${{ steps.some.outputs.gas }}
+          CHECKED_DOCS: ${{ steps.some.outputs.checked_docs }}
+          BENCH_SCRIPTS: ${{ steps.some.outputs.bench_scripts }}
+          GOLDEN_TESTS: ${{ steps.some.outputs.golden_tests }}
+          DOC_SOURCES: ${{ steps.some.outputs.doc_sources }}
+          CONSUMER: ${{ steps.some.outputs.consumer }}
+          CAIRO: ${{ steps.every.outputs.cairo }}
+          TEST_GLAMX: ${{ steps.every.outputs.test_glamx }}
+          TEST_FACADE: ${{ steps.every.outputs.test_facade }}
+          REFGEN: ${{ steps.every.outputs.refgen }}
+          UNKNOWN: ${{ steps.every.outputs.unknown }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT" != "pull_request" ]]; then
+            for job in fmt_lint test bench golden docs consumer_cost; do
+              echo "$job=true" >> "$GITHUB_OUTPUT"
+            done
+            exit 0
+          fi
+          # A filter output that is neither true nor false (a misspelt name) fails the job.
+          for name in TOOLCHAIN SCRIPTS GAS CHECKED_DOCS BENCH_SCRIPTS GOLDEN_TESTS DOC_SOURCES CONSUMER CAIRO TEST_GLAMX TEST_FACADE REFGEN UNKNOWN; do
+            if [[ "${!name}" != "true" && "${!name}" != "false" ]]; then
+              echo "::error::filter output $name is '${!name}', expected true or false"
+              exit 1
+            fi
+          done
+          any() {
+            for name in "$@"; do
+              if [[ "${!name}" == "true" ]]; then echo true; return; fi
+            done
+            echo false
+          }
+          echo "fmt_lint=$(any TOOLCHAIN UNKNOWN CAIRO SCRIPTS GAS CHECKED_DOCS)" >> "$GITHUB_OUTPUT"
+          echo "test=$(any TOOLCHAIN UNKNOWN TEST_GLAMX TEST_FACADE)" >> "$GITHUB_OUTPUT"
+          echo "bench=$(any TOOLCHAIN UNKNOWN CAIRO GAS BENCH_SCRIPTS)" >> "$GITHUB_OUTPUT"
+          echo "golden=$(any TOOLCHAIN UNKNOWN REFGEN GOLDEN_TESTS)" >> "$GITHUB_OUTPUT"
+          echo "docs=$(any TOOLCHAIN UNKNOWN DOC_SOURCES)" >> "$GITHUB_OUTPUT"
+          echo "consumer_cost=$(any TOOLCHAIN UNKNOWN CONSUMER)" >> "$GITHUB_OUTPUT"
+          cat "$GITHUB_OUTPUT"
+
   fmt-lint:
     name: Format and lint
+    needs: changes
+    if: ${{ needs.changes.outputs.fmt_lint == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -39,6 +168,8 @@ jobs:
 
   test:
     name: Test glamx
+    needs: changes
+    if: ${{ needs.changes.outputs.test == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -76,6 +207,8 @@ jobs:
 
   bench:
     name: Build, benches, gas snapshots
+    needs: changes
+    if: ${{ needs.changes.outputs.bench == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -119,6 +252,8 @@ jobs:
 
   golden:
     name: Golden vectors up to date
+    needs: changes
+    if: ${{ needs.changes.outputs.golden == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -136,6 +271,8 @@ jobs:
 
   docs:
     name: Docs build
+    needs: changes
+    if: ${{ needs.changes.outputs.docs == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -159,6 +296,8 @@ jobs:
   # consumer_cost.toml.
   consumer-cost:
     name: Consumer cost
+    needs: changes
+    if: ${{ needs.changes.outputs.consumer_cost == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -208,11 +347,54 @@ jobs:
   all-checks:
     name: All checks passed
     if: always()
-    needs: [fmt-lint, test, bench, golden, docs, consumer-cost]
+    needs: [changes, fmt-lint, test, bench, golden, docs, consumer-cost]
     runs-on: ubuntu-latest
+    env:
+      EVENT: ${{ github.event_name }}
+      CHANGES_RESULT: ${{ needs.changes.result }}
+      FLAG_FMT_LINT: ${{ needs.changes.outputs.fmt_lint }}
+      RESULT_FMT_LINT: ${{ needs.fmt-lint.result }}
+      FLAG_TEST: ${{ needs.changes.outputs.test }}
+      RESULT_TEST: ${{ needs.test.result }}
+      FLAG_BENCH: ${{ needs.changes.outputs.bench }}
+      RESULT_BENCH: ${{ needs.bench.result }}
+      FLAG_GOLDEN: ${{ needs.changes.outputs.golden }}
+      RESULT_GOLDEN: ${{ needs.golden.result }}
+      FLAG_DOCS: ${{ needs.changes.outputs.docs }}
+      RESULT_DOCS: ${{ needs.docs.result }}
+      FLAG_CONSUMER_COST: ${{ needs.changes.outputs.consumer_cost }}
+      RESULT_CONSUMER_COST: ${{ needs.consumer-cost.result }}
     steps:
+      # A job passes when it succeeded, or when the paths rule skipped it. On a pull request its
+      # result is compared with the flag that gates it: flag true needs success, flag false needs
+      # skipped (a skip for another reason, such as a failed dependency, fails), any other flag
+      # value (a misspelt output) fails. Elsewhere every job must have succeeded.
       - run: |
-          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]] || \
-             [[ "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
-            exit 1
+          fail=0
+          if [[ "$CHANGES_RESULT" != "success" ]]; then
+            echo "::error::changes: $CHANGES_RESULT"
+            fail=1
           fi
+          check() {
+            local job=$1 flag=$2 result=$3 want
+            if [[ "$EVENT" != "pull_request" || "$flag" == "true" ]]; then
+              want=success
+            elif [[ "$flag" == "false" ]]; then
+              want=skipped
+            else
+              echo "::error::$job: gate flag is '$flag', expected true or false"
+              fail=1
+              return
+            fi
+            if [[ "$result" != "$want" ]]; then
+              echo "::error::$job: $result (flag '$flag', expected $want)"
+              fail=1
+            fi
+          }
+          check fmt-lint "$FLAG_FMT_LINT" "$RESULT_FMT_LINT"
+          check test "$FLAG_TEST" "$RESULT_TEST"
+          check bench "$FLAG_BENCH" "$RESULT_BENCH"
+          check golden "$FLAG_GOLDEN" "$RESULT_GOLDEN"
+          check docs "$FLAG_DOCS" "$RESULT_DOCS"
+          check consumer-cost "$FLAG_CONSUMER_COST" "$RESULT_CONSUMER_COST"
+          exit "$fail"

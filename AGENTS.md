@@ -40,7 +40,7 @@ for `packages/facade_check`). Their source and design documents live in `fixed-c
 | Check all snapshots | `scripts/bench.py check` |
 | Check bytecode fixtures | `scripts/bytecode_size.py check` |
 
-Toolchain versions live in `.tool-versions` only.
+Toolchain versions live in `.tool-versions` only. On a pull request the CI runs each job only when a path that concerns it changed (the `changes` job of `.github/workflows/ci.yml`; prose `.md` triggers nothing, pushes to `main` run everything).
 
 ## Principles
 
