@@ -72,7 +72,10 @@ packages and their dependents, the lint of the touched packages only, the golden
 bytecode size. Never push red and never use `--no-verify`; commit (or remove) changes first, never
 `git stash`. The full gate is CI (`scripts/check.sh`); the pre-push leaves to CI the snforge suites,
 the gas snapshots (`bench.py check`), `scarb doc`, the refgen unit tests, the consumer-cost measure
-and a lint seen only in a dependent of a touched package. It needs Python >= 3.11 (`tomllib`).
+a lint seen only in a dependent of a touched package, and the whole Cairo compile when the shared
+heavy-build lock stays busy for 90 s (the script then prints "heavy lock busy: Cairo compile left to
+CI" and passes; where there is no lock, as on the Mac, the compile always runs). It needs
+Python >= 3.11 (`tomllib`).
 
 ## Definition of done
 

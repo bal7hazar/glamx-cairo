@@ -6,14 +6,21 @@
 #
 # Always: formatting, the unit tests of the Python scripts, the cheap `--check` modes of the
 # document/generator scripts (including `gen_eigen3.py emit --check`). Only when their inputs
-# changed since the base: the compile of the touched packages and of the workspace packages that
-# depend on them, the lint of the touched packages only, the golden vectors and the bytecode size.
-# Needs Python >= 3.11.
+# changed since the base: the golden vectors, and the "heavy" steps (the compile of the touched
+# packages and of the workspace packages that depend on them, the lint of the touched packages only,
+# the bytecode size). Needs Python >= 3.11.
+#
+# The heavy steps need the shared heavy-build lock: they wait for it at most 90 s (once, for the
+# whole group, `flock -w 90` on the lock file the shim uses). Not obtained: they are skipped with
+# one line "heavy lock busy: Cairo compile left to CI" and the script still passes. Where there is
+# no lock (no flock or no lock file, as on the Mac) they always run. fmt, the self-tests and the
+# generated-artefact checks that need no build always run.
 #
 # Left to CI (scripts/check.sh is the full gate, run by CI): the snforge test suites (`snforge
 # test -p glamx`, `-p facade_check`), the gas snapshots (`bench.py check`), `scarb doc`, the Rust
 # unit tests of tools/refgen, the consumer-cost measure, and a lint seen only in a package that
-# depends on a touched one (`scarb lint --workspace` in CI).
+# depends on a touched one (`scarb lint --workspace` in CI), and the heavy steps when the lock is
+# busy for 90 s.
 #
 # `scarb` is always called through PATH: on the shared VPS the shim ~/.local/bin/scarb serialises
 # build/lint/check on ~/orchestrator/heavy-build.lock. The wait on that lock is printed apart from
@@ -72,34 +79,48 @@ step() {
   echo "    ok: $name ($((SECONDS - t0)) s)"
 }
 
-# lstep <name> <cmd...>: step that goes through the shim's heavy-build lock (scarb build, lint,
-# check; bytecode_size.py). Where the lock file's directory exists (the VPS) the step runs under
-# `flock` so the wait is measured; the shim sees the ancestor holding the lock and does not wait
-# again. Elsewhere the command runs as is.
-lstep() {
-  local name=$1
-  shift
-  local t0=$SECONDS t_start
-  t_start=$(date +%s.%N)
-  echo "==> $name"
+# heavy_group: the steps that need the heavy-build lock (the Cairo compile, the lint of the touched
+# packages, bytecode_size.py). Runs with the lock held (see below) or, where there is no lock, as is.
+# Inputs, exported as strings: H_COMPILE_CMD (build|check), H_COMPILE_ARGS, H_LINT_ARGS, H_BYTECODE.
+heavy_group() {
+  # shellcheck disable=SC2086
+  if [[ -n "$H_COMPILE_ARGS" ]]; then
+    echo "prepush: Cairo inputs changed; compiling: $H_COMPILE_ARGS"
+    step "scarb $H_COMPILE_CMD $H_COMPILE_ARGS" scarb "$H_COMPILE_CMD" $H_COMPILE_ARGS
+    step "scarb lint $H_LINT_ARGS --test --deny-warnings" \
+      scarb lint $H_LINT_ARGS --test --deny-warnings
+  fi
+  if [[ "$H_BYTECODE" == 1 ]]; then
+    step "bytecode_size.py check" python3 scripts/bytecode_size.py check
+  fi
+}
+export -f step heavy_group
+
+# run_heavy: where the lock file's directory and `flock` exist (the VPS), take the lock ONCE for
+# the whole group with `flock -w 90` (the shim, called through PATH, sees the ancestor holding it and
+# does not wait again). Not obtained in 90 s: skip the group, print one line, pass. Where there is
+# no lock (no flock or no lock directory, as on the Mac) the group always runs.
+run_heavy() {
   if [[ -d "$(dirname "$LOCK")" ]] && command -v flock >/dev/null 2>&1; then
-    local acq
+    local acq t_start t_end t_acq rc=0
     acq=$(mktemp)
-    flock "$LOCK" bash -c 'date +%s.%N >"$1"; shift; exec "$@"' _ "$acq" "$@"
-    local t_end t_acq
+    t_start=$(date +%s.%N)
+    flock -w "${PREPUSH_LOCK_WAIT:-90}" -E 75 "$LOCK" \
+      bash -c 'date +%s.%N >"$1"; set -euo pipefail; heavy_group' _ "$acq" || rc=$?
     t_end=$(date +%s.%N)
     t_acq=$(<"$acq")
     rm -f "$acq"
-    # wait = acquisition - start; work = end - acquisition
-    local wait work
-    wait=$(awk -v a="$t_acq" -v s="$t_start" 'BEGIN { w = a - s; if (w < 0) w = 0; printf "%.1f", w }')
-    work=$(awk -v a="$t_acq" -v e="$t_end" 'BEGIN { printf "%.1f", e - a }')
-    lock_wait_total=$(awk -v t="$lock_wait_total" -v w="$wait" 'BEGIN { printf "%.1f", t + w }')
-    echo "    ok: $name (lock wait ${wait} s, work ${work} s)"
-  else
-    "$@"
-    echo "    ok: $name ($((SECONDS - t0)) s, no lock)"
+    if [[ $rc -eq 75 ]]; then
+      echo "prepush: waited $(awk -v a="$t_start" -v e="$t_end" 'BEGIN { printf "%.1f", e - a }') s for ${LOCK}"
+      echo "heavy lock busy: Cairo compile left to CI"
+      lock_wait_total=$(awk -v a="$t_start" -v e="$t_end" 'BEGIN { printf "%.1f", e - a }')
+      return 0
+    fi
+    lock_wait_total=$(awk -v a="$t_acq" -v s="$t_start" 'BEGIN { printf "%.1f", a - s }')
+    echo "prepush: lock wait ${lock_wait_total} s; work $(awk -v a="$t_acq" -v e="$t_end" 'BEGIN { printf "%.1f", e - a }') s (lock taken at $(date -d "@${t_acq%.*}" +%H:%M:%S))"
+    return "$rc"
   fi
+  heavy_group
 }
 
 # --- changed-input detection -------------------------------------------------------------------
@@ -183,19 +204,15 @@ elif [[ -n "$affected_pkgs" ]]; then
   for p in $touched_names; do lint_args+=(-p "$p"); done
 fi
 
-if [[ ${#compile_args[@]} -gt 0 ]]; then
-  echo "prepush: Cairo inputs changed; compiling: ${compile_args[*]}"
-  # `scarb build` with several -p flags builds them in one invocation (one lock acquisition).
-  lstep "scarb ${PREPUSH_COMPILE:-build} ${compile_args[*]}" \
-    scarb "${PREPUSH_COMPILE:-build}" "${compile_args[@]}"
-  lstep "scarb lint ${lint_args[*]} --test --deny-warnings" \
-    scarb lint "${lint_args[@]}" --test --deny-warnings
+export H_COMPILE_CMD="${PREPUSH_COMPILE:-build}"
+export H_COMPILE_ARGS="${compile_args[*]:-}" H_LINT_ARGS="${lint_args[*]:-}" H_BYTECODE=0
+if touches '^(packages/(glamx|consumer)/|Scarb\.(toml|lock)|\.tool-versions|scripts/bytecode_size\.py|gas/bytecode\.size)'; then
+  H_BYTECODE=1
+fi
+if [[ -n "$H_COMPILE_ARGS" || "$H_BYTECODE" == 1 ]]; then
+  run_heavy
 else
   echo "prepush: no Cairo source, manifest or toolchain file changed: skipping compile and lint"
-fi
-
-if touches '^(packages/(glamx|consumer)/|Scarb\.(toml|lock)|\.tool-versions|scripts/bytecode_size\.py|gas/bytecode\.size)'; then
-  lstep "bytecode_size.py check" python3 scripts/bytecode_size.py check
 fi
 
 echo "prepush: all checks passed in $((SECONDS - total_start)) s (lock wait ${lock_wait_total} s)"
