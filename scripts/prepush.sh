@@ -22,9 +22,10 @@
 # depends on a touched one (`scarb lint --workspace` in CI), and the heavy steps when the lock is
 # busy for 90 s.
 #
-# `scarb` is always called through PATH: on the shared VPS the shim ~/.local/bin/scarb serialises
-# build/lint/check on ~/orchestrator/heavy-build.lock. The wait on that lock is printed apart from
-# the work of each step. Never bypass the hook (`--no-verify`) nor the lock.
+# Outside the lock group `scarb` is called through PATH (so `scarb fmt`, and the compile where there
+# is no lock, as on the Mac, use the shim). Inside the group, which holds
+# ~/orchestrator/heavy-build.lock, the real binary is called. The wait on the lock is printed apart
+# from the work. Never bypass the hook (`--no-verify`) nor the lock.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -86,9 +87,10 @@ heavy_group() {
   # shellcheck disable=SC2086
   if [[ -n "$H_COMPILE_ARGS" ]]; then
     echo "prepush: Cairo inputs changed; compiling: $H_COMPILE_ARGS"
-    step "scarb $H_COMPILE_CMD $H_COMPILE_ARGS" scarb "$H_COMPILE_CMD" $H_COMPILE_ARGS
+    local scarb_bin="${H_SCARB:-scarb}"
+    step "scarb $H_COMPILE_CMD $H_COMPILE_ARGS" $scarb_bin "$H_COMPILE_CMD" $H_COMPILE_ARGS
     step "scarb lint $H_LINT_ARGS --test --deny-warnings" \
-      scarb lint $H_LINT_ARGS --test --deny-warnings
+      $scarb_bin lint $H_LINT_ARGS --test --deny-warnings
   fi
   if [[ "$H_BYTECODE" == 1 ]]; then
     step "bytecode_size.py check" python3 scripts/bytecode_size.py check
@@ -97,13 +99,14 @@ heavy_group() {
 export -f step heavy_group
 
 # run_heavy: where the lock file's directory and `flock` exist (the VPS), take the lock ONCE for
-# the whole group with `flock -w 90` (the shim, called through PATH, sees the ancestor holding it and
-# does not wait again). Not obtained in 90 s: skip the group, print one line, pass. Where there is
+# the whole group with `flock -w 90` (inside it HEAVY_BUILD_LOCK_HELD=1 is set, scarb is the real
+# binary and nested shim calls pass through; nothing is ever killed). `-E 75` plus the empty
+# acquired-marker file tell a timeout from a step that itself failed. Not obtained in 90 s: skip the group, print one line, pass. Where there is
 # no lock (no flock or no lock directory, as on the Mac) the group always runs.
 ancestor_holds_lock() { # as the shim checks it
   local p=$PPID
   while [[ -n "$p" && "$p" -gt 1 ]] 2>/dev/null; do
-    if ls -l /proc/"$p"/fd 2>/dev/null | grep -qF -- "$LOCK"; then return 0; fi
+    if ls -l /proc/"$p"/fd 2>/dev/null | grep -F -- "$LOCK" >/dev/null; then return 0; fi
     p=$(awk '{print $4}' /proc/"$p"/stat 2>/dev/null) || return 1
   done
   return 1
@@ -118,7 +121,12 @@ run_heavy() {
     acq=$(mktemp)
     t_start=$(date +%s.%N)
     flock -w "${PREPUSH_LOCK_WAIT:-90}" -E 75 "$LOCK" \
-      bash -c 'date +%s.%N >"$1"; set -euo pipefail; heavy_group' _ "$acq" || rc=$?
+      bash -c 'date +%s.%N >"$1"; set -euo pipefail
+        # Lock held: call the REAL scarb (as the shim resolves it), lowered priority and capped
+        # parallelism like the shim, and let nested shim calls (bytecode_size.py -> scarb) pass.
+        export HEAVY_BUILD_LOCK_HELD=1 RAYON_NUM_THREADS="${RAYON_NUM_THREADS:-4}"
+        export CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-4}" H_SCARB="nice -n 10 $HOME/.asdf/shims/scarb"
+        heavy_group' _ "$acq" || rc=$?
     t_end=$(date +%s.%N)
     if [[ $rc -eq 75 && ! -s "$acq" ]]; then
       lock_wait_total=$(awk -v a="$t_start" -v e="$t_end" 'BEGIN { printf "%.1f", e - a }')
