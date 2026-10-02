@@ -5,9 +5,9 @@
 #   <base>  the commit changes are measured from (default: merge base of <sha> and origin/main)
 #
 # Always: formatting, the unit tests of the Python scripts, the cheap `--check` modes of the
-# document/generator scripts. Only when their inputs changed since the base: the compile and the
-# lint of the touched packages and of the workspace packages that depend on them, the generated
-# artefacts (`gen_eigen3.py emit --check`, the bytecode size, the golden vectors).
+# document/generator scripts (including `gen_eigen3.py emit --check`). Only when their inputs
+# changed since the base: the compile and the lint of the touched packages and of the workspace
+# packages that depend on them, the golden vectors and the bytecode size. Needs Python >= 3.11.
 #
 # Left to CI (scripts/check.sh is the full gate, run by CI): the snforge test suites (`snforge
 # test -p glamx`, `-p facade_check`), the gas snapshots (`bench.py check`), `scarb doc`, the Rust
@@ -28,7 +28,11 @@ head=$(git rev-parse HEAD)
 if [[ -n "${2:-}" ]]; then
   base=$(git rev-parse --verify "$2^{commit}")
 else
-  base=$(git merge-base "$sha" origin/main 2>/dev/null || git rev-parse "$sha")
+  if ! base=$(git merge-base "$sha" origin/main 2>/dev/null); then
+    echo "prepush: no merge base of ${sha:0:12} with origin/main (run 'git fetch origin', or pass" >&2
+    echo "  the base explicitly: scripts/prepush.sh <sha> <base>): refusing to guess an empty change set." >&2
+    exit 1
+  fi
 fi
 
 # The checks run on the working tree but a push sends commits: refuse when they differ.
@@ -151,9 +155,8 @@ step "panic_coverage.py --check" python3 scripts/panic_coverage.py --check
 
 # --- only when their inputs changed ------------------------------------------------------------
 
-if touches '^(scripts/gen_eigen3\.py|packages/glamx/)'; then
-  step "gen_eigen3.py emit --check" python3 scripts/gen_eigen3.py emit --check
-fi
+# Always run (about 1 s): its inputs span packages/glamx/ and packages/benches/src/alt/eigen3.cairo.
+step "gen_eigen3.py emit --check" python3 scripts/gen_eigen3.py emit --check
 
 if touches '^(tools/refgen/|packages/glamx/tests/golden_)'; then
   if command -v cargo >/dev/null 2>&1; then

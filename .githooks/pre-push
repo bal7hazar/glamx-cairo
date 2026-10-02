@@ -12,7 +12,7 @@ while read -r _local_ref local_sha _remote_ref _remote_sha; do
   shas+=("$local_sha")
 done
 
-for sha in "${shas[@]}"; do
+for sha in ${shas[@]+"${shas[@]}"}; do
   if ! scripts/prepush.sh "$sha" </dev/null; then
     echo "pre-push: scripts/prepush.sh failed for $sha: push blocked. Fix it, commit, push again." >&2
     exit 1
