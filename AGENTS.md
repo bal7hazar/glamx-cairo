@@ -63,6 +63,20 @@ Toolchain versions live in `.tool-versions` only.
 4. Run `scripts/check.sh` until green.
 5. Use a conventional commit scoped to the module and open a pull request; do not merge it.
 
+## Before every push
+
+Run `scripts/prepush.sh` (the `.githooks/pre-push` hook does it; enable it once per clone with
+`git config core.hooksPath .githooks`). It checks the commit being pushed: formatting, the Python
+script self-tests and `--check` modes, and, when their inputs changed, the compile of the touched
+packages and their dependents, the lint of the touched packages only, the golden vectors and the
+bytecode size. Never push red and never use `--no-verify`; commit (or remove) changes first, never
+`git stash`. The full gate is CI (`scripts/check.sh`); the pre-push leaves to CI the snforge suites,
+the gas snapshots (`bench.py check`), `scarb doc`, the refgen unit tests, the consumer-cost measure,
+a lint seen only in a dependent of a touched package, and the whole Cairo compile when the shared
+heavy-build lock stays busy for 90 s (the script then prints one line "heavy lock busy: Cairo
+compile left to CI" and passes; where there is no lock directory or no `flock`, as on the Mac, the compile always runs). It needs
+Python >= 3.11 (`tomllib`).
+
 ## Definition of done
 
 - Every public item has the glamx name and the documentation template (`Mirrors`, `#### Panics`,
