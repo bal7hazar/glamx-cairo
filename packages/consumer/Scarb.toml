@@ -13,7 +13,7 @@ publish = false
 fixed.workspace = true
 glam_core.workspace = true
 glamx.workspace = true
-starknet = "2.19.4"
+starknet = "2.20.0"
 
 [[target.starknet-contract]]
 sierra = true
