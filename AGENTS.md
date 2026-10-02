@@ -67,12 +67,12 @@ Toolchain versions live in `.tool-versions` only.
 
 Run `scripts/prepush.sh` (the `.githooks/pre-push` hook does it; enable it once per clone with
 `git config core.hooksPath .githooks`). It checks the commit being pushed: formatting, the Python
-script self-tests and `--check` modes, and, when their inputs changed, the compile and lint of the
-touched packages and their dependents, the golden vectors and the bytecode size. Never push
-red and never use `--no-verify`; commit (or remove) changes first, never `git stash`. The full gate
-is CI (`scripts/check.sh`); the pre-push leaves to CI the snforge suites, the gas snapshots
-(`bench.py check`), `scarb doc`, the refgen unit tests and the consumer-cost measure. It needs
-Python >= 3.11 (`tomllib`).
+script self-tests and `--check` modes, and, when their inputs changed, the compile of the touched
+packages and their dependents, the lint of the touched packages only, the golden vectors and the
+bytecode size. Never push red and never use `--no-verify`; commit (or remove) changes first, never
+`git stash`. The full gate is CI (`scripts/check.sh`); the pre-push leaves to CI the snforge suites,
+the gas snapshots (`bench.py check`), `scarb doc`, the refgen unit tests, the consumer-cost measure
+and a lint seen only in a dependent of a touched package. It needs Python >= 3.11 (`tomllib`).
 
 ## Definition of done
 

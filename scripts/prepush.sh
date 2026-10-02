@@ -6,12 +6,14 @@
 #
 # Always: formatting, the unit tests of the Python scripts, the cheap `--check` modes of the
 # document/generator scripts (including `gen_eigen3.py emit --check`). Only when their inputs
-# changed since the base: the compile and the lint of the touched packages and of the workspace
-# packages that depend on them, the golden vectors and the bytecode size. Needs Python >= 3.11.
+# changed since the base: the compile of the touched packages and of the workspace packages that
+# depend on them, the lint of the touched packages only, the golden vectors and the bytecode size.
+# Needs Python >= 3.11.
 #
 # Left to CI (scripts/check.sh is the full gate, run by CI): the snforge test suites (`snforge
 # test -p glamx`, `-p facade_check`), the gas snapshots (`bench.py check`), `scarb doc`, the Rust
-# unit tests of tools/refgen and the consumer-cost measure.
+# unit tests of tools/refgen, the consumer-cost measure, and a lint seen only in a package that
+# depends on a touched one (`scarb lint --workspace` in CI).
 #
 # `scarb` is always called through PATH: on the shared VPS the shim ~/.local/bin/scarb serialises
 # build/lint/check on ~/orchestrator/heavy-build.lock. The wait on that lock is printed apart from
@@ -115,11 +117,12 @@ while IFS= read -r p; do
 done < <(grep -E '^packages/[^/]+/.*(\.cairo|Scarb\.toml|Scarb\.lock)$' <<<"$changed" |
   cut -d/ -f2 | sort -u || true)
 
-# Workspace package names that depend (transitively, by workspace path) on the touched ones, plus
-# the touched ones. Computed from the Scarb.toml files, so a new package needs no edit here.
+# Package names of the touched packages (lint) and of those plus the workspace packages that
+# depend on them transitively (compile). Computed from the Scarb.toml files, so a new package needs no edit here.
 affected_pkgs=""
+touched_names=""
 if [[ $workspace_wide -eq 0 && -n "$touched_pkgs" ]]; then
-  affected_pkgs=$(python3 - $touched_pkgs <<'PY'
+  read -r -d '' pyout < <(python3 - $touched_pkgs <<'PY'
 import sys, tomllib, pathlib
 root = pathlib.Path("packages")
 names, deps = {}, {}
@@ -137,9 +140,12 @@ while changed:
         if names[p] not in out and ds & out:
             out.add(names[p])
             changed = True
+print(" ".join(sorted(touched)))
 print(" ".join(sorted(out)))
 PY
-  )
+  ) || true
+  touched_names=$(sed -n 1p <<<"$pyout")
+  affected_pkgs=$(sed -n 2p <<<"$pyout")
 fi
 
 # --- always ------------------------------------------------------------------------------------
@@ -168,10 +174,13 @@ if touches '^(tools/refgen/|packages/glamx/tests/golden_)'; then
 fi
 
 compile_args=()
+lint_args=()
 if [[ $workspace_wide -eq 1 ]]; then
   compile_args=(--workspace)
+  lint_args=(--workspace)
 elif [[ -n "$affected_pkgs" ]]; then
   for p in $affected_pkgs; do compile_args+=(-p "$p"); done
+  for p in $touched_names; do lint_args+=(-p "$p"); done
 fi
 
 if [[ ${#compile_args[@]} -gt 0 ]]; then
@@ -179,8 +188,8 @@ if [[ ${#compile_args[@]} -gt 0 ]]; then
   # `scarb build` with several -p flags builds them in one invocation (one lock acquisition).
   lstep "scarb ${PREPUSH_COMPILE:-build} ${compile_args[*]}" \
     scarb "${PREPUSH_COMPILE:-build}" "${compile_args[@]}"
-  lstep "scarb lint ${compile_args[*]} --test --deny-warnings" \
-    scarb lint "${compile_args[@]}" --test --deny-warnings
+  lstep "scarb lint ${lint_args[*]} --test --deny-warnings" \
+    scarb lint "${lint_args[@]}" --test --deny-warnings
 else
   echo "prepush: no Cairo source, manifest or toolchain file changed: skipping compile and lint"
 fi
