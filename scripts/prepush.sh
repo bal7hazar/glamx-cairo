@@ -13,7 +13,7 @@
 # The heavy steps need the shared heavy-build lock: they wait for it at most 90 s (once, for the
 # whole group, `flock -w 90` on the lock file the shim uses). Not obtained: they are skipped with
 # one line "heavy lock busy: Cairo compile left to CI" and the script still passes. Where there is
-# no lock (no flock or no lock file, as on the Mac) they always run. fmt, the self-tests and the
+# no lock (no flock or no lock directory, as on the Mac) they always run. fmt, the self-tests and the
 # generated-artefact checks that need no build always run.
 #
 # Left to CI (scripts/check.sh is the full gate, run by CI): the snforge test suites (`snforge
@@ -100,22 +100,35 @@ export -f step heavy_group
 # the whole group with `flock -w 90` (the shim, called through PATH, sees the ancestor holding it and
 # does not wait again). Not obtained in 90 s: skip the group, print one line, pass. Where there is
 # no lock (no flock or no lock directory, as on the Mac) the group always runs.
+ancestor_holds_lock() { # as the shim checks it
+  local p=$PPID
+  while [[ -n "$p" && "$p" -gt 1 ]] 2>/dev/null; do
+    if ls -l /proc/"$p"/fd 2>/dev/null | grep -qF -- "$LOCK"; then return 0; fi
+    p=$(awk '{print $4}' /proc/"$p"/stat 2>/dev/null) || return 1
+  done
+  return 1
+}
+
+heavy_skipped=0
 run_heavy() {
-  if [[ -d "$(dirname "$LOCK")" ]] && command -v flock >/dev/null 2>&1; then
+  if [[ -n "${HEAVY_BUILD_LOCK_HELD:-}" ]] || ancestor_holds_lock; then
+    heavy_group # the lock is already held by a caller: no wait
+  elif [[ -d "$(dirname "$LOCK")" ]] && command -v flock >/dev/null 2>&1; then
     local acq t_start t_end t_acq rc=0
     acq=$(mktemp)
     t_start=$(date +%s.%N)
     flock -w "${PREPUSH_LOCK_WAIT:-90}" -E 75 "$LOCK" \
       bash -c 'date +%s.%N >"$1"; set -euo pipefail; heavy_group' _ "$acq" || rc=$?
     t_end=$(date +%s.%N)
-    t_acq=$(<"$acq")
-    rm -f "$acq"
-    if [[ $rc -eq 75 ]]; then
-      echo "prepush: waited $(awk -v a="$t_start" -v e="$t_end" 'BEGIN { printf "%.1f", e - a }') s for ${LOCK}"
-      echo "heavy lock busy: Cairo compile left to CI"
+    if [[ $rc -eq 75 && ! -s "$acq" ]]; then
       lock_wait_total=$(awk -v a="$t_start" -v e="$t_end" 'BEGIN { printf "%.1f", e - a }')
+      echo "heavy lock busy: Cairo compile left to CI (waited ${lock_wait_total} s)"
+      heavy_skipped=1
+      rm -f "$acq"
       return 0
     fi
+    t_acq=$(<"$acq")
+    rm -f "$acq"
     lock_wait_total=$(awk -v a="$t_acq" -v s="$t_start" 'BEGIN { printf "%.1f", a - s }')
     echo "prepush: lock wait ${lock_wait_total} s; work $(awk -v a="$t_acq" -v e="$t_end" 'BEGIN { printf "%.1f", e - a }') s (lock taken at $(date -d "@${t_acq%.*}" +%H:%M:%S))"
     return "$rc"
@@ -143,7 +156,7 @@ done < <(grep -E '^packages/[^/]+/.*(\.cairo|Scarb\.toml|Scarb\.lock)$' <<<"$cha
 affected_pkgs=""
 touched_names=""
 if [[ $workspace_wide -eq 0 && -n "$touched_pkgs" ]]; then
-  read -r -d '' pyout < <(python3 - $touched_pkgs <<'PY'
+  pyout=$(python3 - $touched_pkgs <<'PY'
 import sys, tomllib, pathlib
 root = pathlib.Path("packages")
 names, deps = {}, {}
@@ -164,7 +177,7 @@ while changed:
 print(" ".join(sorted(touched)))
 print(" ".join(sorted(out)))
 PY
-  ) || true
+  )
   touched_names=$(sed -n 1p <<<"$pyout")
   affected_pkgs=$(sed -n 2p <<<"$pyout")
 fi
@@ -215,4 +228,8 @@ else
   echo "prepush: no Cairo source, manifest or toolchain file changed: skipping compile and lint"
 fi
 
-echo "prepush: all checks passed in $((SECONDS - total_start)) s (lock wait ${lock_wait_total} s)"
+if [[ $heavy_skipped -eq 1 ]]; then
+  echo "prepush: passed (heavy steps left to CI) in $((SECONDS - total_start)) s"
+else
+  echo "prepush: all checks passed in $((SECONDS - total_start)) s (lock wait ${lock_wait_total} s)"
+fi
