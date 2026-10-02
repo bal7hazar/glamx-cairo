@@ -63,6 +63,16 @@ Toolchain versions live in `.tool-versions` only.
 4. Run `scripts/check.sh` until green.
 5. Use a conventional commit scoped to the module and open a pull request; do not merge it.
 
+## Before every push
+
+Run `scripts/prepush.sh` (the `.githooks/pre-push` hook does it; enable it once per clone with
+`git config core.hooksPath .githooks`). It checks the commit being pushed: formatting, the Python
+script self-tests and `--check` modes, and, when their inputs changed, the compile and lint of the
+touched packages and their dependents, the generated artefacts and the bytecode size. Never push
+red and never use `--no-verify`; commit (or remove) changes first, never `git stash`. The full gate
+is CI (`scripts/check.sh`); the pre-push leaves to CI the snforge suites, the gas snapshots
+(`bench.py check`), `scarb doc` and the refgen unit tests.
+
 ## Definition of done
 
 - Every public item has the glamx name and the documentation template (`Mirrors`, `#### Panics`,

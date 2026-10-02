@@ -19,6 +19,18 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: software-mansion/setup-scarb@2a96b748888e3329ee44ac9ac073d930e692b3cd # v1.6.2
+        id: scarb_1
+        continue-on-error: true
+      - run: sleep 20
+        if: steps.scarb_1.outcome == 'failure'
+      - uses: software-mansion/setup-scarb@2a96b748888e3329ee44ac9ac073d930e692b3cd # v1.6.2
+        id: scarb_2
+        if: steps.scarb_1.outcome == 'failure'
+        continue-on-error: true
+      - run: sleep 20
+        if: steps.scarb_1.outcome == 'failure' && steps.scarb_2.outcome == 'failure'
+      - uses: software-mansion/setup-scarb@2a96b748888e3329ee44ac9ac073d930e692b3cd # v1.6.2
+        if: steps.scarb_1.outcome == 'failure' && steps.scarb_2.outcome == 'failure'
       - run: scarb fmt --check --workspace
       - run: scarb lint --workspace --test --deny-warnings
       - run: python3 scripts/gas_tables.py --check
@@ -31,7 +43,31 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: software-mansion/setup-scarb@2a96b748888e3329ee44ac9ac073d930e692b3cd # v1.6.2
+        id: scarb_1
+        continue-on-error: true
+      - run: sleep 20
+        if: steps.scarb_1.outcome == 'failure'
+      - uses: software-mansion/setup-scarb@2a96b748888e3329ee44ac9ac073d930e692b3cd # v1.6.2
+        id: scarb_2
+        if: steps.scarb_1.outcome == 'failure'
+        continue-on-error: true
+      - run: sleep 20
+        if: steps.scarb_1.outcome == 'failure' && steps.scarb_2.outcome == 'failure'
+      - uses: software-mansion/setup-scarb@2a96b748888e3329ee44ac9ac073d930e692b3cd # v1.6.2
+        if: steps.scarb_1.outcome == 'failure' && steps.scarb_2.outcome == 'failure'
       - uses: foundry-rs/setup-snfoundry@16e23ddd0e2845f38727c92f4b913a7b728cda9e # v6.0.0
+        id: snfoundry_1
+        continue-on-error: true
+      - run: sleep 20
+        if: steps.snfoundry_1.outcome == 'failure'
+      - uses: foundry-rs/setup-snfoundry@16e23ddd0e2845f38727c92f4b913a7b728cda9e # v6.0.0
+        id: snfoundry_2
+        if: steps.snfoundry_1.outcome == 'failure'
+        continue-on-error: true
+      - run: sleep 20
+        if: steps.snfoundry_1.outcome == 'failure' && steps.snfoundry_2.outcome == 'failure'
+      - uses: foundry-rs/setup-snfoundry@16e23ddd0e2845f38727c92f4b913a7b728cda9e # v6.0.0
+        if: steps.snfoundry_1.outcome == 'failure' && steps.snfoundry_2.outcome == 'failure'
       - run: scarb build -p glamx
       - name: Test
         run: snforge test -p glamx --fuzzer-runs 32 --fuzzer-seed 1
@@ -44,7 +80,31 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: software-mansion/setup-scarb@2a96b748888e3329ee44ac9ac073d930e692b3cd # v1.6.2
+        id: scarb_1
+        continue-on-error: true
+      - run: sleep 20
+        if: steps.scarb_1.outcome == 'failure'
+      - uses: software-mansion/setup-scarb@2a96b748888e3329ee44ac9ac073d930e692b3cd # v1.6.2
+        id: scarb_2
+        if: steps.scarb_1.outcome == 'failure'
+        continue-on-error: true
+      - run: sleep 20
+        if: steps.scarb_1.outcome == 'failure' && steps.scarb_2.outcome == 'failure'
+      - uses: software-mansion/setup-scarb@2a96b748888e3329ee44ac9ac073d930e692b3cd # v1.6.2
+        if: steps.scarb_1.outcome == 'failure' && steps.scarb_2.outcome == 'failure'
       - uses: foundry-rs/setup-snfoundry@16e23ddd0e2845f38727c92f4b913a7b728cda9e # v6.0.0
+        id: snfoundry_1
+        continue-on-error: true
+      - run: sleep 20
+        if: steps.snfoundry_1.outcome == 'failure'
+      - uses: foundry-rs/setup-snfoundry@16e23ddd0e2845f38727c92f4b913a7b728cda9e # v6.0.0
+        id: snfoundry_2
+        if: steps.snfoundry_1.outcome == 'failure'
+        continue-on-error: true
+      - run: sleep 20
+        if: steps.snfoundry_1.outcome == 'failure' && steps.snfoundry_2.outcome == 'failure'
+      - uses: foundry-rs/setup-snfoundry@16e23ddd0e2845f38727c92f4b913a7b728cda9e # v6.0.0
+        if: steps.snfoundry_1.outcome == 'failure' && steps.snfoundry_2.outcome == 'failure'
       - name: Check gas snapshots
         run: |
           set -o pipefail
@@ -80,6 +140,18 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: software-mansion/setup-scarb@2a96b748888e3329ee44ac9ac073d930e692b3cd # v1.6.2
+        id: scarb_1
+        continue-on-error: true
+      - run: sleep 20
+        if: steps.scarb_1.outcome == 'failure'
+      - uses: software-mansion/setup-scarb@2a96b748888e3329ee44ac9ac073d930e692b3cd # v1.6.2
+        id: scarb_2
+        if: steps.scarb_1.outcome == 'failure'
+        continue-on-error: true
+      - run: sleep 20
+        if: steps.scarb_1.outcome == 'failure' && steps.scarb_2.outcome == 'failure'
+      - uses: software-mansion/setup-scarb@2a96b748888e3329ee44ac9ac073d930e692b3cd # v1.6.2
+        if: steps.scarb_1.outcome == 'failure' && steps.scarb_2.outcome == 'failure'
       - run: scarb doc --workspace --disable-remote-linking
 
   # Package granularity rule (PK-G): the published crates against the size gates (library lines,
@@ -92,6 +164,18 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: software-mansion/setup-scarb@2a96b748888e3329ee44ac9ac073d930e692b3cd # v1.6.2
+        id: scarb_1
+        continue-on-error: true
+      - run: sleep 20
+        if: steps.scarb_1.outcome == 'failure'
+      - uses: software-mansion/setup-scarb@2a96b748888e3329ee44ac9ac073d930e692b3cd # v1.6.2
+        id: scarb_2
+        if: steps.scarb_1.outcome == 'failure'
+        continue-on-error: true
+      - run: sleep 20
+        if: steps.scarb_1.outcome == 'failure' && steps.scarb_2.outcome == 'failure'
+      - uses: software-mansion/setup-scarb@2a96b748888e3329ee44ac9ac073d930e692b3cd # v1.6.2
+        if: steps.scarb_1.outcome == 'failure' && steps.scarb_2.outcome == 'failure'
       - name: Consumer cost script (self-test, no build)
         run: |
           python3 scripts/consumer_cost.py --self-test

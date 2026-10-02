@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Pre-push hook: runs scripts/prepush.sh for every commit being pushed. Enabled by
+# `git config core.hooksPath .githooks`. Never bypass it with --no-verify.
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+zero=0000000000000000000000000000000000000000
+shas=()
+# Read every line first: a child process must not consume the remaining ones.
+while read -r _local_ref local_sha _remote_ref _remote_sha; do
+  [[ -z "${local_sha:-}" || "$local_sha" == "$zero" ]] && continue # deleting a ref: nothing to check
+  shas+=("$local_sha")
+done
+
+for sha in "${shas[@]}"; do
+  if ! scripts/prepush.sh "$sha" </dev/null; then
+    echo "pre-push: scripts/prepush.sh failed for $sha: push blocked. Fix it, commit, push again." >&2
+    exit 1
+  fi
+done
