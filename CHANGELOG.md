@@ -7,6 +7,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning pol
 
 Nothing yet.
 
+## [0.5.0] - 2026-10-05
+
+No glamx result changes: every gas snapshot and golden file is identical to 0.4.1. `glam_core` 0.5.0
+changes the result of `Quat::to_axis_angle` and `to_scaled_axis`; `glamx` calls neither (it only
+uses `Quat::from_scaled_axis`) and re-exports neither.
+
+### Changed
+
+- Depends on `fixed` 0.5.0 and `glam_core` 0.5.0 (was 0.4.x); `facade_check` on `glam` 0.5.0.
+
 ## [0.4.1] - 2026-09-28
 
 No API change and no numeric change: every gas snapshot and golden file is identical to 0.4.0.

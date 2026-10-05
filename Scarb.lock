@@ -3,7 +3,7 @@ version = 1
 
 [[package]]
 name = "benches"
-version = "0.4.1"
+version = "0.5.0"
 dependencies = [
  "fixed",
  "glam_core",
@@ -13,7 +13,7 @@ dependencies = [
 
 [[package]]
 name = "consumer"
-version = "0.4.1"
+version = "0.5.0"
 dependencies = [
  "fixed",
  "glam_core",
@@ -22,7 +22,7 @@ dependencies = [
 
 [[package]]
 name = "facade_check"
-version = "0.4.1"
+version = "0.5.0"
 dependencies = [
  "fixed",
  "glam",
@@ -32,15 +32,15 @@ dependencies = [
 
 [[package]]
 name = "fixed"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://scarbs.xyz/"
-checksum = "sha256:a8f7ec541b8cc85894688ae9008cddb87cccc55a024b04b35f7fd3716d715064"
+checksum = "sha256:697d3e82f4eb156e56dfcc025d96fd77edca6d05878a0fc16d3ac8c664230fb9"
 
 [[package]]
 name = "glam"
-version = "0.4.1"
+version = "0.5.0"
 source = "registry+https://scarbs.xyz/"
-checksum = "sha256:e835d496f197342a97a214662aee29920c306ee6238f7404b1261f26d42a4f4e"
+checksum = "sha256:e7ff692eb6c33d81926abffe72df7fbda83d9daa232fe313ac3ae5b2d345521e"
 dependencies = [
  "fixed",
  "glam_core",
@@ -51,18 +51,18 @@ dependencies = [
 
 [[package]]
 name = "glam_core"
-version = "0.4.1"
+version = "0.5.0"
 source = "registry+https://scarbs.xyz/"
-checksum = "sha256:86351a73e26bfd6bbdd7548775e9377b33ed08a9616a249117942ccb29b7c75f"
+checksum = "sha256:a5e6e4863acfc4be492e06f8f965a16982b8a8975a5179a903d64092a9f05975"
 dependencies = [
  "fixed",
 ]
 
 [[package]]
 name = "glam_int"
-version = "0.4.1"
+version = "0.5.0"
 source = "registry+https://scarbs.xyz/"
-checksum = "sha256:64fd9c5e3003283a1bbc3231a20181fb15cce7362e52cec539953a9461652380"
+checksum = "sha256:b8067667ba5985bbf53d43b7bbf80a09c5b205c1abae5722af5d97082495a0bc"
 dependencies = [
  "fixed",
  "glam_core",
@@ -70,9 +70,9 @@ dependencies = [
 
 [[package]]
 name = "glam_int_swizzles"
-version = "0.4.1"
+version = "0.5.0"
 source = "registry+https://scarbs.xyz/"
-checksum = "sha256:6e1f8a8133c467f1b08efd0883f74d616a83d3525326b3699f8c5a61bddfe6b5"
+checksum = "sha256:f9886ae154bb9e267888353e84dfedc097c48c02bbe863e59bd1fffa9d0d65bf"
 dependencies = [
  "fixed",
  "glam_core",
@@ -80,9 +80,9 @@ dependencies = [
 
 [[package]]
 name = "glam_swizzles"
-version = "0.4.1"
+version = "0.5.0"
 source = "registry+https://scarbs.xyz/"
-checksum = "sha256:47c260d6c07e4d04f3a6e9599cc550790ae74851f632c600a5728e7958223133"
+checksum = "sha256:54389e759f14c0fd59ececd829387f703488cdf72c383592f3671b63d0eabd79"
 dependencies = [
  "fixed",
  "glam_core",
@@ -90,7 +90,7 @@ dependencies = [
 
 [[package]]
 name = "glamx"
-version = "0.4.1"
+version = "0.5.0"
 dependencies = [
  "fixed",
  "glam_core",
