@@ -9,9 +9,10 @@ Nothing yet.
 
 ## [0.5.0] - 2026-10-05
 
-No glamx result changes: every gas snapshot and golden file is identical to 0.4.1. `glam_core` 0.5.0
-changes the result of `Quat::to_axis_angle` and `to_scaled_axis`; `glamx` calls neither (it only
-uses `Quat::from_scaled_axis`) and re-exports neither.
+MINOR result change, inherited from `glam_core` 0.5.0: glamx's `Rot3` is `glam_core::Quat`, so
+`Rot3::to_axis_angle` and `Rot3::to_scaled_axis` return a different axis for a vector part of length
+in [2^-16, 2^-8). Every other input and every other glamx function gives the same result as 0.4.1;
+every gas snapshot and golden file is identical to 0.4.1.
 
 ### Changed
 
