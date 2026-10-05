@@ -11,7 +11,7 @@ The `glamx` package provides `Rot2`, `Rot3`, `Pose2`, `Pose3`, `SdpMatrix2`, `Sd
 
 ```toml
 [dependencies]
-glamx = "0.4.1"
+glamx = "0.5.0"
 ```
 
 The package is compatible with Cairo 2.20.0. It depends on

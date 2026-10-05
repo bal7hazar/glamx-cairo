@@ -7,6 +7,17 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning pol
 
 Nothing yet.
 
+## [0.5.0] - 2026-10-05
+
+MINOR result change, inherited from `glam_core` 0.5.0: glamx's `Rot3` is `glam_core::Quat`, so
+`Rot3::to_axis_angle` and `Rot3::to_scaled_axis` return a different axis for a vector part of length
+in [2^-16, 2^-8). Every other input and every other glamx function gives the same result as 0.4.1;
+every gas snapshot and golden file is identical to 0.4.1.
+
+### Changed
+
+- Depends on `fixed` 0.5.0 and `glam_core` 0.5.0 (was 0.4.x); `facade_check` on `glam` 0.5.0.
+
 ## [0.4.1] - 2026-09-28
 
 No API change and no numeric change: every gas snapshot and golden file is identical to 0.4.0.
